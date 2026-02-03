@@ -1,0 +1,174 @@
+# =====================================================
+# PRUEBAS DE API - CATÁLOGOS
+# =====================================================
+# Usa estos comandos para probar los endpoints
+# Puedes usar curl, Postman, Insomnia, o Thunder Client (extensión VS Code)
+
+# =====================================================
+# 1. OBTENER TODOS LOS ROLES
+# =====================================================
+GET http://localhost:3000/api/catalogos/roles
+
+# Con búsqueda
+GET http://localhost:3000/api/catalogos/roles?search=Administrador
+
+# Con paginación
+GET http://localhost:3000/api/catalogos/roles?page=1&limit=5
+
+# =====================================================
+# 2. OBTENER UN ROL POR ID
+# =====================================================
+GET http://localhost:3000/api/catalogos/roles/1
+
+# =====================================================
+# 3. CREAR UN NUEVO ROL
+# =====================================================
+POST http://localhost:3000/api/catalogos/roles
+Content-Type: application/json
+
+{
+  "nombre": "Supervisor",
+  "descripcion": "Supervisa el funcionamiento del tribunal"
+}
+
+# =====================================================
+# 4. ACTUALIZAR UN ROL
+# =====================================================
+PUT http://localhost:3000/api/catalogos/roles/1
+Content-Type: application/json
+
+{
+  "descripcion": "Administrador del sistema con acceso completo"
+}
+
+# =====================================================
+# 5. ELIMINAR UN ROL
+# =====================================================
+DELETE http://localhost:3000/api/catalogos/roles/7
+
+# =====================================================
+# 6. OBTENER ESTADÍSTICAS
+# =====================================================
+GET http://localhost:3000/api/catalogos/roles/stats
+
+# =====================================================
+# ESTADOS PROCESALES
+# =====================================================
+GET http://localhost:3000/api/catalogos/estados-procesales
+POST http://localhost:3000/api/catalogos/estados-procesales
+Content-Type: application/json
+
+{
+  "nombre": "En revisión"
+}
+
+# =====================================================
+# TIPOS DE MEDIDAS SANCIONADORAS
+# =====================================================
+GET http://localhost:3000/api/catalogos/tipos-medidas-sancionadoras
+
+POST http://localhost:3000/api/catalogos/tipos-medidas-sancionadoras
+Content-Type: application/json
+
+{
+  "nombre": "Trabajo comunitario supervisado",
+  "es_privativa": false
+}
+
+# =====================================================
+# TIPOS DE MEDIDAS CAUTELARES
+# =====================================================
+GET http://localhost:3000/api/catalogos/tipos-medidas-cautelares
+
+POST http://localhost:3000/api/catalogos/tipos-medidas-cautelares
+Content-Type: application/json
+
+{
+  "nombre": "Supervisión electrónica",
+  "genera_cemci": true
+}
+
+# =====================================================
+# TIPOS DE REPARACIÓN
+# =====================================================
+GET http://localhost:3000/api/catalogos/tipos-reparacion
+
+POST http://localhost:3000/api/catalogos/tipos-reparacion
+Content-Type: application/json
+
+{
+  "nombre": "Reparación integral del daño"
+}
+
+# =====================================================
+# STATUS
+# =====================================================
+GET http://localhost:3000/api/catalogos/status
+
+# =====================================================
+# PRUEBAS DE VALIDACIÓN (deben fallar)
+# =====================================================
+
+# Falta campo requerido
+POST http://localhost:3000/api/catalogos/roles
+Content-Type: application/json
+
+{
+  "descripcion": "Sin nombre"
+}
+
+# Tipo de catálogo inválido
+GET http://localhost:3000/api/catalogos/inventado
+
+# ID inválido
+GET http://localhost:3000/api/catalogos/roles/abc
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# ÉXITO (200)
+{
+  "success": true,
+  "data": [...],
+  "message": "roles obtenidos exitosamente",
+  "timestamp": "2024-02-02T10:30:00.000Z"
+}
+
+# CREACIÓN (201)
+{
+  "success": true,
+  "data": {
+    "id_rol": 7,
+    "nombre": "Supervisor",
+    "descripcion": "Supervisa el tribunal"
+  },
+  "message": "Registro creado exitosamente",
+  "timestamp": "2024-02-02T10:30:00.000Z"
+}
+
+# ERROR (400, 404, 409, etc.)
+{
+  "success": false,
+  "error": {
+    "message": "Registro no encontrado en roles",
+    "code": "fail"
+  },
+  "timestamp": "2024-02-02T10:30:00.000Z"
+}
+
+# PAGINACIÓN
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 5,
+    "total": 20,
+    "totalPages": 4,
+    "hasNext": true,
+    "hasPrev": false
+  },
+  "message": "roles obtenidos exitosamente",
+  "timestamp": "2024-02-02T10:30:00.000Z"
+}
