@@ -74,11 +74,15 @@ app.get('/health', (req, res) => {
     });
 });
 
-// TODO: Importar y montar rutas aquí
-// const authRoutes = require('./routes/authRoutes');
-// app.use('/api/auth', authRoutes);
+// ===================================================
+// RUTAS DE LA API
+// ===================================================
 
-// Rutas de catálogos
+// Autenticación
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
+// Catálogos
 const catalogoRoutes = require('./routes/catalogoRoutes');
 app.use('/api/catalogos', catalogoRoutes);
 

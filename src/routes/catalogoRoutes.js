@@ -4,6 +4,8 @@ const express = require('express');
 const router = express.Router();
 const catalogoController = require('../controllers/catalogoController');
 const { asyncHandler } = require('../middlewares/errorMiddleware');
+const { authMiddleware } = require('../middlewares/auth');
+const { adminOrJuzgado, adminOnly } = require('../middlewares/checkRole');
 const {
     validateCatalogoTipo,
     validateId,
@@ -17,6 +19,10 @@ const {
  *
  * Todas las rutas usan el parámetro :tipo para identificar el catálogo
  * Ejemplo: /api/catalogos/roles
+ *
+ * PROTECCIÓN:
+ * - GET (lectura): Requiere autenticación
+ * - POST/PUT/DELETE (escritura): Requiere rol Administrador o Juzgado
  */
 
 /**
@@ -25,10 +31,11 @@ const {
  * @query   page (opcional) - Número de página
  * @query   limit (opcional) - Registros por página
  * @query   search (opcional) - Búsqueda por nombre
- * @access  Public (TODO: cambiar a Private cuando haya auth)
+ * @access  Private (requiere autenticación)
  */
 router.get(
     '/:tipo',
+    authMiddleware,  // ← Requiere estar autenticado
     validateCatalogoTipo,
     validatePagination,
     asyncHandler(catalogoController.getAll)
@@ -37,10 +44,11 @@ router.get(
 /**
  * @route   GET /api/catalogos/:tipo/stats
  * @desc    Obtener estadísticas de un catálogo
- * @access  Public (TODO: cambiar a Private)
+ * @access  Private (requiere autenticación)
  */
 router.get(
     '/:tipo/stats',
+    authMiddleware,
     validateCatalogoTipo,
     asyncHandler(catalogoController.getStats)
 );
@@ -48,10 +56,11 @@ router.get(
 /**
  * @route   GET /api/catalogos/:tipo/:id
  * @desc    Obtener un registro específico por ID
- * @access  Public (TODO: cambiar a Private)
+ * @access  Private (requiere autenticación)
  */
 router.get(
     '/:tipo/:id',
+    authMiddleware,
     validateCatalogoTipo,
     validateId,
     asyncHandler(catalogoController.getById)
@@ -61,10 +70,12 @@ router.get(
  * @route   POST /api/catalogos/:tipo
  * @desc    Crear un nuevo registro en el catálogo
  * @body    { nombre, descripcion?, es_privativa?, genera_cemci? }
- * @access  Private (TODO: Solo Admin/Juez)
+ * @access  Private (Solo Admin o Juzgado)
  */
 router.post(
     '/:tipo',
+    authMiddleware,
+    adminOrJuzgado,  // ← Solo Admin o Juzgado pueden crear
     validateCatalogoTipo,
     validateCatalogoCreate,
     asyncHandler(catalogoController.create)
@@ -74,10 +85,12 @@ router.post(
  * @route   PUT /api/catalogos/:tipo/:id
  * @desc    Actualizar un registro del catálogo
  * @body    { nombre?, descripcion?, es_privativa?, genera_cemci? }
- * @access  Private (TODO: Solo Admin/Juez)
+ * @access  Private (Solo Admin o Juzgado)
  */
 router.put(
     '/:tipo/:id',
+    authMiddleware,
+    adminOrJuzgado,
     validateCatalogoTipo,
     validateId,
     validateCatalogoUpdate,
@@ -87,10 +100,12 @@ router.put(
 /**
  * @route   DELETE /api/catalogos/:tipo/:id
  * @desc    Eliminar un registro del catálogo
- * @access  Private (TODO: Solo Admin)
+ * @access  Private (Solo Admin)
  */
 router.delete(
     '/:tipo/:id',
+    authMiddleware,
+    adminOnly,  // ← Solo Admin puede eliminar
     validateCatalogoTipo,
     validateId,
     asyncHandler(catalogoController.remove)
