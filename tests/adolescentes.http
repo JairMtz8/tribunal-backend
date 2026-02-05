@@ -1,0 +1,353 @@
+# =====================================================
+# PRUEBAS DE API - ADOLESCENTES
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. LISTAR ADOLESCENTES
+# =====================================================
+
+### Obtener todos los adolescentes
+GET {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+
+### Con paginación
+GET {{baseUrl}}/adolescentes?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Buscar por nombre
+GET {{baseUrl}}/adolescentes?search=Juan
+Authorization: Bearer {{token}}
+
+### Filtrar por sexo
+GET {{baseUrl}}/adolescentes?sexo=Hombre
+Authorization: Bearer {{token}}
+
+### Filtrar por rango de edad
+GET {{baseUrl}}/adolescentes?edad_min=14&edad_max=16
+Authorization: Bearer {{token}}
+
+### Combinando filtros
+GET {{baseUrl}}/adolescentes?sexo=Mujer&edad_min=15&search=Maria
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 2. OBTENER ADOLESCENTE POR ID
+# =====================================================
+
+### Obtener adolescente específico
+GET {{baseUrl}}/adolescentes/1
+Authorization: Bearer {{token}}
+
+### Verificar si tiene proceso
+GET {{baseUrl}}/adolescentes/1/proceso
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. CREAR ADOLESCENTE
+# =====================================================
+
+### Crear adolescente mínimo (solo campos requeridos)
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan Pérez García",
+  "fecha_nacimiento": "2010-05-15"
+}
+
+### Crear adolescente completo con domicilio
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "María López Martínez",
+  "iniciales": "MLM",
+  "sexo": "Mujer",
+  "fecha_nacimiento": "2009-08-20",
+  "nacionalidad": "Mexicana",
+  "idioma": "Español",
+  "otro_idioma_lengua": "Náhuatl",
+  "escolaridad": "Secundaria incompleta",
+  "ocupacion": "Estudiante",
+  "estado_civil": "Soltera",
+  "lugar_nacimiento_municipio": "Puebla",
+  "lugar_nacimiento_estado": "Puebla",
+  "fuma_cigarro": false,
+  "consume_alcohol": false,
+  "consume_drogas": false,
+  "tipo_droga": null,
+  "telefono": "2221234567",
+  "correo": "maria.lopez@example.com",
+  "domicilio": {
+    "municipio": "Puebla",
+    "calle_numero": "Calle 5 de Mayo #123",
+    "colonia": "Centro"
+  }
+}
+
+### Crear adolescente con consumo de sustancias
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Sánchez",
+  "iniciales": "CS",
+  "sexo": "Hombre",
+  "fecha_nacimiento": "2011-03-10",
+  "fuma_cigarro": true,
+  "consume_alcohol": true,
+  "consume_drogas": true,
+  "tipo_droga": "Marihuana",
+  "domicilio": {
+    "municipio": "Cholula",
+    "calle_numero": "Av. Juárez #456",
+    "colonia": "San Andrés"
+  }
+}
+
+# =====================================================
+# 4. ACTUALIZAR ADOLESCENTE
+# =====================================================
+
+### Actualizar datos básicos
+PUT {{baseUrl}}/adolescentes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "2229876543",
+  "correo": "nuevo.correo@example.com",
+  "escolaridad": "Secundaria completa"
+}
+
+### Actualizar domicilio
+PUT {{baseUrl}}/adolescentes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "domicilio": {
+    "municipio": "Puebla",
+    "calle_numero": "Nueva dirección #789",
+    "colonia": "Nueva colonia"
+  }
+}
+
+### Actualizar consumo de sustancias
+PUT {{baseUrl}}/adolescentes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fuma_cigarro": false,
+  "consume_alcohol": false,
+  "consume_drogas": false,
+  "tipo_droga": null
+}
+
+# =====================================================
+# 5. ELIMINAR ADOLESCENTE
+# =====================================================
+
+### Eliminar adolescente (solo Admin)
+DELETE {{baseUrl}}/adolescentes/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. ESTADÍSTICAS
+# =====================================================
+
+### Obtener estadísticas
+GET {{baseUrl}}/adolescentes/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. PRUEBAS DE VALIDACIÓN (deben fallar)
+# =====================================================
+
+### Falta campo requerido (nombre)
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_nacimiento": "2010-05-15"
+}
+
+### Falta campo requerido (fecha_nacimiento)
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Test Usuario"
+}
+
+### Edad fuera de rango (menor de 12)
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Niño Pequeño",
+  "fecha_nacimiento": "2020-01-01"
+}
+
+### Edad fuera de rango (mayor de 17)
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Adulto Joven",
+  "fecha_nacimiento": "2000-01-01"
+}
+
+### Sexo inválido
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Test Usuario",
+  "fecha_nacimiento": "2010-05-15",
+  "sexo": "Invalido"
+}
+
+### Formato de fecha incorrecto
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Test Usuario",
+  "fecha_nacimiento": "15/05/2010"
+}
+
+### Email inválido
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Test Usuario",
+  "fecha_nacimiento": "2010-05-15",
+  "correo": "email-invalido"
+}
+
+# =====================================================
+# 8. CURL EQUIVALENTES (Windows CMD)
+# =====================================================
+
+# Listar todos
+curl http://localhost:3000/api/adolescentes ^
+-H "Authorization: Bearer TOKEN"
+
+# Crear adolescente
+curl -X POST http://localhost:3000/api/adolescentes ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"nombre\":\"Juan Perez\",\"fecha_nacimiento\":\"2010-05-15\"}"
+
+# Actualizar
+curl -X PUT http://localhost:3000/api/adolescentes/1 ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"telefono\":\"2229876543\"}"
+
+# Eliminar
+curl -X DELETE http://localhost:3000/api/adolescentes/1 ^
+-H "Authorization: Bearer TOKEN"
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Creación exitosa (201)
+{
+"success": true,
+"data": {
+"id_adolescente": 1,
+"nombre": "Juan Pérez García",
+"iniciales": null,
+"sexo": null,
+"fecha_nacimiento": "2010-05-15",
+"edad": 14,
+"nacionalidad": "Mexicana",
+"idioma": "Español",
+"telefono": null,
+"correo": null,
+"domicilio_id": null,
+"domicilio": null
+},
+"message": "Adolescente creado exitosamente",
+"timestamp": "2024-02-02T23:00:00.000Z"
+}
+
+# Lista paginada (200)
+{
+"success": true,
+"data": [
+{
+"id_adolescente": 1,
+"nombre": "Juan Pérez",
+"edad": 14,
+...
+}
+],
+"pagination": {
+"page": 1,
+"limit": 10,
+"total": 25,
+"totalPages": 3,
+"hasNext": true,
+"hasPrev": false
+},
+"message": "Adolescentes obtenidos exitosamente"
+}
+
+# Estadísticas (200)
+{
+"success": true,
+"data": {
+"total": 25,
+"por_sexo": {
+"hombres": 15,
+"mujeres": 10
+},
+"por_edad": {
+"12-13": 5,
+"14-15": 12,
+"16-17": 8
+}
+}
+}
+
+# Error de validación - Edad fuera de rango (422)
+{
+"success": false,
+"error": {
+"message": "Error de validación en los datos enviados",
+"details": [
+{
+"field": "fecha_nacimiento",
+"message": "La edad debe estar entre 12 y 17 años (edad calculada: 24)",
+"value": "2000-01-01"
+}
+]
+}
+}
+
+# Error - No se puede eliminar (409)
+{
+"success": false,
+"error": {
+"message": "No se puede eliminar el adolescente porque tiene un proceso asignado. Primero debe eliminarse el proceso."
+}
+}

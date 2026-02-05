@@ -86,6 +86,22 @@ app.use('/api/auth', authRoutes);
 const catalogoRoutes = require('./routes/catalogoRoutes');
 app.use('/api/catalogos', catalogoRoutes);
 
+// Domicilios
+const domicilioRoutes = require('./routes/domicilioRoutes');
+app.use('/api/domicilios', domicilioRoutes);
+
+// Adolescentes
+const adolescenteRoutes = require('./routes/adolescenteRoutes');
+app.use('/api/adolescentes', adolescenteRoutes);
+
+// Procesos
+const procesoRoutes = require('./routes/procesoRoutes');
+app.use('/api/procesos', procesoRoutes);
+
+// CJ (Carpeta Judicial)
+const cjRoutes = require('./routes/cjRoutes');
+app.use('/api/cj', cjRoutes);
+
 // ===================================================
 // MIDDLEWARE DE MANEJO DE ERRORES
 // ===================================================

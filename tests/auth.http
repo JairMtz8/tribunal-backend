@@ -1,0 +1,290 @@
+# =====================================================
+# PRUEBAS DE API - AUTENTICACIÓN
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+
+# Variables (se actualizan después del login)
+@token = TU_TOKEN_AQUI
+@userId = 1
+
+# =====================================================
+# 1. LOGIN
+# =====================================================
+
+### Login con usuario admin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "contrasena": "admin123"
+}
+
+# Respuesta esperada:
+# {
+#   "success": true,
+#   "data": {
+#     "usuario": { ... },
+#     "token": "eyJhbGc..." ← COPIAR ESTE TOKEN
+#   }
+# }
+
+### Login con credenciales incorrectas (debe fallar)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "contrasena": "incorrecta"
+}
+
+# =====================================================
+# 2. PERFIL DEL USUARIO ACTUAL
+# =====================================================
+
+### Obtener mi perfil
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### Actualizar mi perfil
+PUT {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Administrador Actualizado",
+  "correo": "admin_nuevo@tribunal.gob.mx"
+}
+
+### Cambiar mi contraseña
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contrasena_actual": "admin123",
+  "contrasena_nueva": "nueva_contrasena_segura"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ADMINISTRACIÓN DE USUARIOS (Solo Admin)
+# =====================================================
+
+### Registrar nuevo usuario
+POST {{baseUrl}}/auth/register
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Martínez",
+  "usuario": "fiscal02",
+  "correo": "fiscal02@tribunal.gob.mx",
+  "contrasena": "fiscal123",
+  "rol_id": 3
+}
+
+### Listar todos los usuarios
+GET {{baseUrl}}/auth/users
+Authorization: Bearer {{token}}
+
+### Listar usuarios activos
+GET {{baseUrl}}/auth/users?activo=true
+Authorization: Bearer {{token}}
+
+### Listar usuarios por rol
+GET {{baseUrl}}/auth/users?rol_id=2
+Authorization: Bearer {{token}}
+
+### Buscar usuarios
+GET {{baseUrl}}/auth/users?search=Carlos
+Authorization: Bearer {{token}}
+
+### Obtener usuario por ID
+GET {{baseUrl}}/auth/users/2
+Authorization: Bearer {{token}}
+
+### Actualizar usuario
+PUT {{baseUrl}}/auth/users/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Martínez López",
+  "correo": "carlos.martinez@tribunal.gob.mx"
+}
+
+### Desactivar usuario
+POST {{baseUrl}}/auth/users/2/deactivate
+Authorization: Bearer {{token}}
+
+### Activar usuario
+POST {{baseUrl}}/auth/users/2/activate
+Authorization: Bearer {{token}}
+
+### Eliminar usuario
+DELETE {{baseUrl}}/auth/users/2
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 4. CATÁLOGOS CON AUTENTICACIÓN
+# =====================================================
+
+### Obtener roles (requiere auth)
+GET {{baseUrl}}/catalogos/roles
+Authorization: Bearer {{token}}
+
+### Crear rol (requiere Admin o Juez)
+POST {{baseUrl}}/catalogos/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Coordinador",
+  "descripcion": "Coordina actividades del tribunal"
+}
+
+### Actualizar rol (requiere Admin o Juez)
+PUT {{baseUrl}}/catalogos/roles/7
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "descripcion": "Descripción actualizada"
+}
+
+### Eliminar rol (requiere Admin)
+DELETE {{baseUrl}}/catalogos/roles/7
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. PRUEBAS DE AUTORIZACIÓN (deben fallar)
+# =====================================================
+
+### Sin token (debe retornar 401)
+GET {{baseUrl}}/catalogos/roles
+
+### Token inválido (debe retornar 401)
+GET {{baseUrl}}/catalogos/roles
+Authorization: Bearer token_inventado_12345
+
+### Token expirado (debe retornar 401)
+# Usar un token antiguo
+
+# =====================================================
+# 6. FLUJO COMPLETO
+# =====================================================
+
+### 1. Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "contrasena": "admin123"
+}
+
+### 2. Copiar el token de la respuesta anterior y pegarlo arriba en @token
+
+### 3. Ver mi perfil
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### 4. Crear un usuario
+POST {{baseUrl}}/auth/register
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Ana López",
+  "usuario": "defensa01",
+  "correo": "defensa01@tribunal.gob.mx",
+  "contrasena": "defensa123",
+  "rol_id": 4
+}
+
+### 5. Login con el nuevo usuario
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "defensa01",
+  "contrasena": "defensa123"
+}
+
+### 6. Intentar crear rol con usuario no-admin (debe fallar con 403)
+POST {{baseUrl}}/catalogos/roles
+Authorization: Bearer [TOKEN DEL DEFENSA]
+Content-Type: application/json
+
+{
+  "nombre": "Nuevo Rol",
+  "descripcion": "No debería poder crear esto"
+}
+
+# =====================================================
+# CURL EQUIVALENTES (Windows CMD)
+# =====================================================
+
+# Login
+curl -X POST {{baseUrl}}/auth/login ^
+  -H "Content-Type: application/json" ^
+  -d "{\"usuario\":\"admin\",\"contrasena\":\"admin123\"}"
+
+# Obtener perfil (reemplazar TOKEN)
+curl -X GET {{baseUrl}}/auth/me ^
+  -H "Authorization: Bearer TOKEN"
+
+# Crear usuario
+curl -X POST {{baseUrl}}/auth/register ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nombre\":\"Carlos\",\"usuario\":\"fiscal02\",\"contrasena\":\"fiscal123\",\"rol_id\":3}"
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Login exitoso (200)
+{
+  "success": true,
+  "data": {
+    "usuario": {
+      "id_usuario": 1,
+      "rol_id": 1,
+      "nombre": "Administrador del Sistema",
+      "usuario": "admin",
+      "correo": "admin@tribunal.gob.mx",
+      "activo": true,
+      "rol_nombre": "Administrador",
+      "rol_descripcion": "Acceso total al sistema"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXN1YXJpbyI6ImFkbWluIiwicm9sIjoiQWRtaW5pc3RyYWRvciIsInJvbElkIjoxLCJpYXQiOjE3MDcwNTAwMDAsImV4cCI6MTcwNzY1NDgwMH0..."
+  },
+  "message": "Login exitoso",
+  "timestamp": "2024-02-02T20:00:00.000Z"
+}
+
+# Sin autenticación (401)
+{
+  "success": false,
+  "error": {
+    "message": "Token no proporcionado. Por favor inicia sesión",
+    "code": "fail"
+  },
+  "timestamp": "2024-02-02T20:00:00.000Z"
+}
+
+# Sin permisos (403)
+{
+  "success": false,
+  "error": {
+    "message": "Acceso denegado. Se requiere uno de estos roles: Administrador, Juez",
+    "code": "fail"
+  },
+  "timestamp": "2024-02-02T20:00:00.000Z"
+}

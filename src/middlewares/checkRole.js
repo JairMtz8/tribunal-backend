@@ -11,7 +11,7 @@ const { ForbiddenError } = require('../utils/errorHandler');
  * Uso:
  * router.post('/ruta',
  *   authMiddleware,
- *   checkRole(['Administrador', 'Juez']),
+ *   checkRole(['Administrador']),
  *   controller.funcion
  * )
  */

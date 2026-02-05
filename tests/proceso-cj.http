@@ -1,0 +1,397 @@
+# =====================================================
+# PRUEBAS DE API - PROCESO + CJ
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. CREAR PROCESO CON CJ (TODO EN UNO)
+# =====================================================
+
+### Crear proceso + CJ mínimo
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 1,
+  "cj": {
+    "numero_cj": "CJ-2024-001",
+    "fecha_ingreso": "2024-02-01",
+    "tipo_fuero": "Común"
+  }
+}
+
+### Crear proceso + CJ completo
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 2,
+  "status_id": 1,
+  "observaciones": "Proceso iniciado por robo calificado",
+  "cj": {
+    "numero_cj": "CJ-2024-002",
+    "fecha_ingreso": "2024-02-05",
+    "tipo_fuero": "Común",
+    "control": true,
+    "fecha_control": "2024-02-10",
+    "vinculacion": true,
+    "fecha_vinculacion": "2024-02-15",
+    "conducta_vinculacion": "Robo calificado con violencia",
+    "domicilio_hechos_id": 5,
+    "lesiones": false,
+    "reincidente": false,
+    "numero_total_audiencias": 3,
+    "corporacion_ejecutora": "Policía Estatal",
+    "observaciones": "Caso con testigos presenciales"
+  }
+}
+
+### Con lugar de hechos (domicilio)
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 3,
+  "cj": {
+    "numero_cj": "CJ-2024-003",
+    "fecha_ingreso": "2024-02-08",
+    "tipo_fuero": "Federal",
+    "domicilio_hechos_id": 10,
+    "control": true,
+    "fecha_control": "2024-02-12"
+  }
+}
+
+# =====================================================
+# 2. CONSULTAR PROCESOS
+# =====================================================
+
+### Listar todos los procesos
+GET {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+
+### Con paginación
+GET {{baseUrl}}/procesos?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Buscar por nombre de adolescente
+GET {{baseUrl}}/procesos?search=Juan
+Authorization: Bearer {{token}}
+
+### Filtrar por status
+GET {{baseUrl}}/procesos?status_id=1
+Authorization: Bearer {{token}}
+
+### Obtener proceso específico (con todas sus carpetas)
+GET {{baseUrl}}/procesos/1
+Authorization: Bearer {{token}}
+
+### Obtener proceso de un adolescente
+GET {{baseUrl}}/procesos/adolescente/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de procesos
+GET {{baseUrl}}/procesos/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. CONSULTAR CJ DIRECTAMENTE
+# =====================================================
+
+### Listar todas las CJ
+GET {{baseUrl}}/cj
+Authorization: Bearer {{token}}
+
+### Con filtros
+GET {{baseUrl}}/cj?tipo_fuero=Común
+Authorization: Bearer {{token}}
+
+### Filtrar vinculadas
+GET {{baseUrl}}/cj?vinculacion=true
+Authorization: Bearer {{token}}
+
+### Filtrar reincidentes
+GET {{baseUrl}}/cj?reincidente=true
+Authorization: Bearer {{token}}
+
+### Buscar por número
+GET {{baseUrl}}/cj?search=CJ-2024
+Authorization: Bearer {{token}}
+
+### Obtener CJ específica
+GET {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de CJ
+GET {{baseUrl}}/cj/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 4. ACTUALIZAR PROCESO
+# =====================================================
+
+### Actualizar status y observaciones del proceso
+PUT {{baseUrl}}/procesos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status_id": 2,
+  "observaciones": "Proceso actualizado - en seguimiento"
+}
+
+# =====================================================
+# 5. ACTUALIZAR CJ
+# =====================================================
+
+### Actualizar datos de control
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "control": true,
+  "fecha_control": "2024-02-10",
+  "lesiones": true
+}
+
+### Actualizar vinculación
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vinculacion": true,
+  "fecha_vinculacion": "2024-02-15",
+  "conducta_vinculacion": "Robo agravado en grado de tentativa"
+}
+
+### Actualizar audiencia intermedia
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "audiencia_intermedia": true,
+  "fecha_audiencia_intermedia": "2024-03-01",
+  "numero_total_audiencias": 5
+}
+
+### Marcar como sustraído
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sustraido": true,
+  "fecha_sustraccion": "2024-02-20"
+}
+
+### Agregar narcóticos asegurados
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_narcotico_asegurado": "Marihuana",
+  "peso_narcotico_gramos": 250.5
+}
+
+# =====================================================
+# 6. ELIMINAR (Solo Admin)
+# =====================================================
+
+### Eliminar CJ
+DELETE {{baseUrl}}/cj/5
+Authorization: Bearer {{token}}
+
+### Eliminar proceso
+DELETE {{baseUrl}}/procesos/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. PRUEBAS DE VALIDACIÓN (deben fallar)
+# =====================================================
+
+### Error: Adolescente ya tiene proceso
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 1,
+  "cj": {
+    "numero_cj": "CJ-2024-099",
+    "fecha_ingreso": "2024-02-01"
+  }
+}
+
+### Error: Número de CJ duplicado
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 10,
+  "cj": {
+    "numero_cj": "CJ-2024-001",
+    "fecha_ingreso": "2024-02-01"
+  }
+}
+
+### Error: Falta campo requerido (numero_cj)
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 5,
+  "cj": {
+    "fecha_ingreso": "2024-02-01"
+  }
+}
+
+### Error: Adolescente no existe
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 9999,
+  "cj": {
+    "numero_cj": "CJ-2024-099"
+  }
+}
+
+# =====================================================
+# 8. FLUJO COMPLETO
+# =====================================================
+
+### 1. Crear adolescente
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Ramírez López",
+  "fecha_nacimiento": "2010-03-15",
+  "sexo": "Hombre"
+}
+# Respuesta: { "id_adolescente": 5 }
+
+### 2. Crear lugar de hechos
+POST {{baseUrl}}/domicilios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "municipio": "Puebla",
+  "calle_numero": "Av. Juárez esquina con 5 de Mayo",
+  "colonia": "Centro",
+  "es_lugar_hechos": true
+}
+# Respuesta: { "id_domicilio": 15 }
+
+### 3. Crear proceso con CJ usando adolescente y domicilio
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 5,
+  "status_id": 1,
+  "cj": {
+    "numero_cj": "CJ-2024-010",
+    "fecha_ingreso": "2024-02-10",
+    "tipo_fuero": "Común",
+    "domicilio_hechos_id": 15,
+    "control": true,
+    "fecha_control": "2024-02-15"
+  }
+}
+
+### 4. Ver proceso completo
+GET {{baseUrl}}/procesos/1
+Authorization: Bearer {{token}}
+
+### 5. Actualizar CJ - agregar vinculación
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vinculacion": true,
+  "fecha_vinculacion": "2024-02-20",
+  "conducta_vinculacion": "Robo calificado"
+}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Creación exitosa de proceso + CJ (201)
+{
+"success": true,
+"data": {
+"proceso": {
+"id_proceso": 1,
+"adolescente_id": 1,
+"status_id": 1,
+"observaciones": null,
+"adolescente_nombre": "Juan Pérez",
+"adolescente_fecha_nacimiento": "2010-05-15"
+},
+"carpetas": {
+"cj": {
+"id_cj": 1,
+"numero_cj": "CJ-2024-001",
+"fecha_ingreso": "2024-02-01",
+"tipo_fuero": "Común",
+"control": false,
+"vinculacion": false,
+"domicilio_hechos": null
+},
+"cjo": null,
+"cemci": null,
+"cems": null
+}
+},
+"message": "Proceso y carpeta CJ creados exitosamente"
+}
+
+# Error: Adolescente ya tiene proceso (409)
+{
+"success": false,
+"error": {
+"message": "El adolescente ya tiene un proceso asignado (ID: 1). Un adolescente solo puede tener un proceso."
+}
+}
+
+# Error: Número de CJ duplicado (409)
+{
+"success": false,
+"error": {
+"message": "El número de CJ \"CJ-2024-001\" ya existe"
+}
+}
+
+# Error de permisos - Usuario Fiscal intenta crear (403)
+{
+"success": false,
+"error": {
+"message": "No tienes permisos para crear procesos. Roles permitidos: Administrador, Juzgado, Juzgado Ejecución"
+}
+}
+
+# Error de permisos - Juzgado Ejecución intenta modificar CJ (403)
+{
+"success": false,
+"error": {
+"message": "No tienes permisos para modificar carpetas de tipo CJ. Esta operación requiere uno de estos roles: Administrador, Juzgado"
+}
+}

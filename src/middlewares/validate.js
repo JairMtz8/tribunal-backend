@@ -221,6 +221,264 @@ const validateBoolean = (fieldName) => {
         .withMessage(`${fieldName} debe ser true o false`);
 };
 
+// =====================================================
+// VALIDACIONES PARA ADOLESCENTES
+// =====================================================
+
+/**
+ * Validar creación de adolescente
+ */
+const validateAdolescenteCreate = [
+    body('nombre')
+        .trim()
+        .notEmpty()
+        .withMessage('El nombre es obligatorio')
+        .isLength({ max: 150 })
+        .withMessage('El nombre no puede tener más de 150 caracteres'),
+
+    body('iniciales')
+        .optional()
+        .trim()
+        .isLength({ max: 10 })
+        .withMessage('Las iniciales no pueden tener más de 10 caracteres'),
+
+    body('sexo')
+        .optional()
+        .isIn(['Hombre', 'Mujer', 'Otro'])
+        .withMessage('Sexo debe ser: Hombre, Mujer u Otro'),
+
+    body('fecha_nacimiento')
+        .notEmpty()
+        .withMessage('La fecha de nacimiento es obligatoria')
+        .matches(/^\d{4}-\d{2}-\d{2}$/)
+        .withMessage('Fecha debe tener formato YYYY-MM-DD')
+        .custom((value) => {
+            const fecha = new Date(value);
+            if (isNaN(fecha.getTime())) {
+                throw new Error('Fecha de nacimiento inválida');
+            }
+
+            // Calcular edad
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fecha.getFullYear();
+            const mes = hoy.getMonth() - fecha.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) {
+                edad--;
+            }
+
+            if (edad < 12 || edad > 17) {
+                throw new Error(`La edad debe estar entre 12 y 17 años (edad calculada: ${edad})`);
+            }
+
+            return true;
+        }),
+
+    body('nacionalidad')
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('La nacionalidad no puede tener más de 50 caracteres'),
+
+    body('idioma')
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('El idioma no puede tener más de 50 caracteres'),
+
+    body('otro_idioma_lengua')
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('Otro idioma no puede tener más de 50 caracteres'),
+
+    body('escolaridad')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('La escolaridad no puede tener más de 100 caracteres'),
+
+    body('ocupacion')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('La ocupación no puede tener más de 100 caracteres'),
+
+    body('estado_civil')
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('El estado civil no puede tener más de 50 caracteres'),
+
+    body('lugar_nacimiento_municipio')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('El municipio no puede tener más de 100 caracteres'),
+
+    body('lugar_nacimiento_estado')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('El estado no puede tener más de 100 caracteres'),
+
+    body('fuma_cigarro')
+        .optional()
+        .isBoolean()
+        .withMessage('fuma_cigarro debe ser true o false'),
+
+    body('consume_alcohol')
+        .optional()
+        .isBoolean()
+        .withMessage('consume_alcohol debe ser true o false'),
+
+    body('consume_drogas')
+        .optional()
+        .isBoolean()
+        .withMessage('consume_drogas debe ser true o false'),
+
+    body('tipo_droga')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('El tipo de droga no puede tener más de 100 caracteres'),
+
+    body('telefono')
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('El teléfono no puede tener más de 50 caracteres'),
+
+    body('correo')
+        .optional()
+        .trim()
+        .isEmail()
+        .withMessage('Correo inválido')
+        .normalizeEmail(),
+
+    // Validación de domicilio_id (si se usa domicilio existente)
+    body('domicilio_id')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('domicilio_id debe ser un número entero positivo'),
+
+    // Validación de domicilio (objeto anidado)
+    body('domicilio.municipio')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('El municipio no puede tener más de 100 caracteres'),
+
+    body('domicilio.calle_numero')
+        .optional()
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('La calle y número no puede tener más de 200 caracteres'),
+
+    body('domicilio.colonia')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('La colonia no puede tener más de 100 caracteres'),
+
+    validate
+];
+
+/**
+ * Validar actualización de adolescente
+ */
+const validateAdolescenteUpdate = [
+    body('nombre')
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage('El nombre no puede estar vacío')
+        .isLength({ max: 150 })
+        .withMessage('El nombre no puede tener más de 150 caracteres'),
+
+    body('iniciales')
+        .optional()
+        .trim()
+        .isLength({ max: 10 })
+        .withMessage('Las iniciales no pueden tener más de 10 caracteres'),
+
+    body('sexo')
+        .optional()
+        .isIn(['Hombre', 'Mujer', 'Otro'])
+        .withMessage('Sexo debe ser: Hombre, Mujer u Otro'),
+
+    body('fecha_nacimiento')
+        .optional()
+        .matches(/^\d{4}-\d{2}-\d{2}$/)
+        .withMessage('Fecha debe tener formato YYYY-MM-DD')
+        .custom((value) => {
+            const fecha = new Date(value);
+            if (isNaN(fecha.getTime())) {
+                throw new Error('Fecha de nacimiento inválida');
+            }
+
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fecha.getFullYear();
+            const mes = hoy.getMonth() - fecha.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) {
+                edad--;
+            }
+
+            if (edad < 12 || edad > 17) {
+                throw new Error(`La edad debe estar entre 12 y 17 años (edad calculada: ${edad})`);
+            }
+
+            return true;
+        }),
+
+    body('telefono')
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('El teléfono no puede tener más de 50 caracteres'),
+
+    body('correo')
+        .optional()
+        .trim()
+        .isEmail()
+        .withMessage('Correo inválido')
+        .normalizeEmail(),
+
+    body('fuma_cigarro')
+        .optional()
+        .isBoolean()
+        .withMessage('fuma_cigarro debe ser true o false'),
+
+    body('consume_alcohol')
+        .optional()
+        .isBoolean()
+        .withMessage('consume_alcohol debe ser true o false'),
+
+    body('consume_drogas')
+        .optional()
+        .isBoolean()
+        .withMessage('consume_drogas debe ser true o false'),
+
+    body('domicilio.municipio')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('El municipio no puede tener más de 100 caracteres'),
+
+    body('domicilio.calle_numero')
+        .optional()
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('La calle y número no puede tener más de 200 caracteres'),
+
+    body('domicilio.colonia')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('La colonia no puede tener más de 100 caracteres'),
+
+    validate
+];
+
 module.exports = {
     validate,
     validateCatalogoTipo,
@@ -232,5 +490,7 @@ module.exports = {
     validateDateBefore,
     validateEmail,
     validatePhone,
-    validateBoolean
+    validateBoolean,
+    validateAdolescenteCreate,
+    validateAdolescenteUpdate
 };

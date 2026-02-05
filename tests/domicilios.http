@@ -1,0 +1,225 @@
+# =====================================================
+# PRUEBAS DE API - DOMICILIOS
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. LISTAR DOMICILIOS
+# =====================================================
+
+### Obtener todos los domicilios
+GET {{baseUrl}}/domicilios
+Authorization: Bearer {{token}}
+
+### Obtener solo domicilios personales
+GET {{baseUrl}}/domicilios/personales
+Authorization: Bearer {{token}}
+
+### Obtener solo lugares de hechos
+GET {{baseUrl}}/domicilios/lugares-hechos
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo
+GET {{baseUrl}}/domicilios?es_lugar_hechos=false
+Authorization: Bearer {{token}}
+
+### Buscar
+GET {{baseUrl}}/domicilios?search=Puebla
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 2. CREAR DOMICILIOS
+# =====================================================
+
+### Crear domicilio personal (para adolescente)
+POST {{baseUrl}}/domicilios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "municipio": "Puebla",
+  "calle_numero": "Calle 5 de Mayo #123",
+  "colonia": "Centro",
+  "es_lugar_hechos": false
+}
+
+### Crear lugar de hechos (para CJ)
+POST {{baseUrl}}/domicilios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "municipio": "Cholula",
+  "calle_numero": "Av. Reforma esquina con Juárez",
+  "colonia": "San Andrés",
+  "es_lugar_hechos": true
+}
+
+# =====================================================
+# 3. USAR DOMICILIO EXISTENTE EN ADOLESCENTE
+# =====================================================
+
+### Opción A: Crear domicilio primero
+POST {{baseUrl}}/domicilios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "municipio": "Puebla",
+  "calle_numero": "Calle Nueva #456",
+  "colonia": "La Paz",
+  "es_lugar_hechos": false
+}
+
+### Luego crear adolescente con ese domicilio_id
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan Pérez",
+  "fecha_nacimiento": "2010-05-15",
+  "domicilio_id": 5
+}
+
+### Opción B: Crear adolescente con domicilio anidado (como antes)
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "María López",
+  "fecha_nacimiento": "2009-08-20",
+  "domicilio": {
+    "municipio": "Puebla",
+    "calle_numero": "Calle 16 de Septiembre #789",
+    "colonia": "Centro"
+  }
+}
+
+# =====================================================
+# 4. ACTUALIZAR DOMICILIO
+# =====================================================
+
+### Actualizar datos
+PUT {{baseUrl}}/domicilios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "calle_numero": "Nueva dirección #999",
+  "colonia": "Nueva colonia"
+}
+
+### Cambiar tipo de domicilio
+PUT {{baseUrl}}/domicilios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "es_lugar_hechos": true
+}
+
+# =====================================================
+# 5. ELIMINAR DOMICILIO
+# =====================================================
+
+### Eliminar domicilio (solo Admin)
+DELETE {{baseUrl}}/domicilios/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# EJEMPLOS DE FLUJO COMPLETO
+# =====================================================
+
+### FLUJO 1: Domicilio separado
+
+# 1. Crear domicilio
+POST {{baseUrl}}/domicilios
+{
+  "municipio": "Puebla",
+  "calle_numero": "Calle Principal #100",
+  "colonia": "Centro",
+  "es_lugar_hechos": false
+}
+# Respuesta: { "id_domicilio": 10, ... }
+
+# 2. Crear adolescente usando ese domicilio
+POST {{baseUrl}}/adolescentes
+{
+  "nombre": "Carlos Sánchez",
+  "fecha_nacimiento": "2011-03-15",
+  "domicilio_id": 10
+}
+
+### FLUJO 2: Domicilio anidado (todo en una petición)
+
+# Crear adolescente con domicilio en un solo paso
+POST {{baseUrl}}/adolescentes
+{
+  "nombre": "Ana Martínez",
+  "fecha_nacimiento": "2010-07-20",
+  "domicilio": {
+    "municipio": "Cholula",
+    "calle_numero": "Av. Universidad #456",
+    "colonia": "San Andrés"
+  }
+}
+
+# =====================================================
+# CURL EQUIVALENTES
+# =====================================================
+
+# Listar todos
+curl http://localhost:3000/api/domicilios \
+  -H "Authorization: Bearer TOKEN"
+
+# Crear lugar de hechos
+curl -X POST http://localhost:3000/api/domicilios \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "municipio": "Puebla",
+    "calle_numero": "Lugar del incidente",
+    "es_lugar_hechos": true
+  }'
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Lista de domicilios (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_domicilio": 1,
+      "municipio": "Puebla",
+      "calle_numero": "Calle 5 de Mayo #123",
+      "colonia": "Centro",
+      "es_lugar_hechos": false
+    },
+    {
+      "id_domicilio": 2,
+      "municipio": "Cholula",
+      "calle_numero": "Av. Reforma esquina Juárez",
+      "colonia": "San Andrés",
+      "es_lugar_hechos": true
+    }
+  ]
+}
+
+# Creación exitosa (201)
+{
+  "success": true,
+  "data": {
+    "id_domicilio": 5,
+    "municipio": "Puebla",
+    "calle_numero": "Calle Nueva #456",
+    "colonia": "La Paz",
+    "es_lugar_hechos": false
+  },
+  "message": "Domicilio creado exitosamente"
+}
