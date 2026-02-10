@@ -1,0 +1,424 @@
+# =====================================================
+# PRUEBAS DE API - MEDIDAS CAUTELARES
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# PREREQUISITO: Crear tipos de medidas cautelares
+# =====================================================
+
+### Crear tipo NO privativa (presentación periódica)
+POST {{baseUrl}}/catalogos/tipo_medida_cautelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Presentación periódica",
+  "genera_cemci": false
+}
+# Respuesta: { "id_tipo_medida_cautelar": 1 }
+
+### Crear tipo NO privativa (prohibición de acercarse)
+POST {{baseUrl}}/catalogos/tipo_medida_cautelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Prohibición de acercarse a la víctima",
+  "genera_cemci": false
+}
+# Respuesta: { "id_tipo_medida_cautelar": 2 }
+
+### Crear tipo PRIVATIVA (prisión preventiva)
+POST {{baseUrl}}/catalogos/tipo_medida_cautelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Prisión preventiva",
+  "genera_cemci": true
+}
+# Respuesta: { "id_tipo_medida_cautelar": 3 }
+
+### Crear tipo PRIVATIVA (internamiento provisional)
+POST {{baseUrl}}/catalogos/tipo_medida_cautelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Internamiento provisional",
+  "genera_cemci": true
+}
+# Respuesta: { "id_tipo_medida_cautelar": 4 }
+
+# =====================================================
+# 1. CREAR MEDIDAS CAUTELARES NO PRIVATIVAS
+# =====================================================
+
+### Crear medida NO privativa (presentación periódica)
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_cautelar_id": 1,
+  "fecha_medida_cautelar": "2024-02-20",
+  "observaciones": "Presentarse cada 15 días"
+}
+
+### Crear medida NO privativa (prohibición de acercarse)
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_cautelar_id": 2,
+  "fecha_medida_cautelar": "2024-02-20",
+  "observaciones": "No acercarse a menos de 500m de la víctima"
+}
+
+# =====================================================
+# 2. CREAR MEDIDA PRIVATIVA (AUTO-CREA CEMCI)
+# =====================================================
+
+### ⭐ Crear medida PRIVATIVA (crea CEMCI automáticamente)
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_cautelar_id": 3,
+  "fecha_medida_cautelar": "2024-02-25",
+  "observaciones": "Prisión preventiva justificada por riesgo de fuga"
+}
+# Respuesta incluye: cemci_creado: true, cemci_id: X
+
+### Verificar que se creó el CEMCI
+GET {{baseUrl}}/procesos/1
+Authorization: Bearer {{token}}
+# Debe mostrar cemci_id en proceso_carpeta
+
+# =====================================================
+# 3. CONSULTAR MEDIDAS
+# =====================================================
+
+### Obtener todas las medidas de un proceso
+GET {{baseUrl}}/medidas-cautelares/proceso/1
+Authorization: Bearer {{token}}
+
+### Obtener solo medidas activas (no revocadas)
+GET {{baseUrl}}/medidas-cautelares/proceso/1/activas
+Authorization: Bearer {{token}}
+
+### Verificar si tiene medidas privativas
+GET {{baseUrl}}/medidas-cautelares/proceso/1/privativas
+Authorization: Bearer {{token}}
+
+### Obtener medida por ID
+GET {{baseUrl}}/medidas-cautelares/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de medidas
+GET {{baseUrl}}/medidas-cautelares/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 4. ACTUALIZAR MEDIDAS
+# =====================================================
+
+### Actualizar observaciones
+PUT {{baseUrl}}/medidas-cautelares/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "observaciones": "Presentarse cada 8 días (modificado)"
+}
+
+### Cambiar tipo de medida
+PUT {{baseUrl}}/medidas-cautelares/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_medida_cautelar_id": 2
+}
+
+# =====================================================
+# 5. REVOCAR MEDIDAS
+# =====================================================
+
+### Revocar medida (con fecha específica)
+PUT {{baseUrl}}/medidas-cautelares/1/revocar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_revocacion": "2024-03-01"
+}
+
+### Revocar medida (fecha automática = hoy)
+PUT {{baseUrl}}/medidas-cautelares/2/revocar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+# =====================================================
+# 6. ELIMINAR MEDIDAS
+# =====================================================
+
+### Eliminar medida (Solo Admin)
+DELETE {{baseUrl}}/medidas-cautelares/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. FLUJO COMPLETO - PROCESO CON MEDIDAS
+# =====================================================
+
+### 1. Crear adolescente
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Pedro Ramírez",
+  "fecha_nacimiento": "2008-06-10",
+  "sexo": "Hombre"
+}
+# Respuesta: { "id_adolescente": 20 }
+
+### 2. Crear proceso con CJ
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 20,
+  "cj": {
+    "numero_cj": "CJ-2024-300",
+    "fecha_ingreso": "2024-02-20",
+    "tipo_fuero": "Común"
+  }
+}
+# Respuesta: { "proceso": { "id_proceso": 20 } }
+
+### 3. Aplicar medida NO privativa inicial
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_medida_cautelar_id": 1,
+  "fecha_medida_cautelar": "2024-02-20",
+  "observaciones": "Presentación semanal"
+}
+
+### 4. Ver medidas del proceso
+GET {{baseUrl}}/medidas-cautelares/proceso/20/activas
+Authorization: Bearer {{token}}
+
+### 5. Cambiar a medida PRIVATIVA (crea CEMCI)
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_medida_cautelar_id": 3,
+  "fecha_medida_cautelar": "2024-02-25",
+  "observaciones": "Agravación de situación - prisión preventiva"
+}
+
+### 6. Verificar que se creó CEMCI
+GET {{baseUrl}}/procesos/20
+Authorization: Bearer {{token}}
+# Debe mostrar cemci en carpetas
+
+### 7. Verificar privativas
+GET {{baseUrl}}/medidas-cautelares/proceso/20/privativas
+Authorization: Bearer {{token}}
+# Debe retornar: { "tiene_medidas_privativas": true }
+
+# =====================================================
+# 8. CASO: MÚLTIPLES MEDIDAS NO PRIVATIVAS
+# =====================================================
+
+### Aplicar varias medidas no privativas simultáneas
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_cautelar_id": 1,
+  "fecha_medida_cautelar": "2024-02-20"
+}
+
+###
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_cautelar_id": 2,
+  "fecha_medida_cautelar": "2024-02-20"
+}
+
+### Ver todas las medidas
+GET {{baseUrl}}/medidas-cautelares/proceso/1
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear medida NO privativa (201)
+{
+  "success": true,
+  "data": {
+    "medida": {
+      "id_medida_cautelar": 1,
+      "proceso_id": 1,
+      "tipo_medida_cautelar_id": 1,
+      "tipo_nombre": "Presentación periódica",
+      "fecha_medida_cautelar": "2024-02-20",
+      "revocacion_medida": false,
+      "observaciones": "Presentarse cada 15 días",
+      "genera_cemci": false
+    },
+    "cemci_creado": false,
+    "cemci_id": null
+  },
+  "message": "Medida cautelar creada exitosamente"
+}
+
+# Crear medida PRIVATIVA (201) - ⭐ AUTO-CREA CEMCI
+{
+  "success": true,
+  "data": {
+    "medida": {
+      "id_medida_cautelar": 3,
+      "proceso_id": 1,
+      "tipo_medida_cautelar_id": 3,
+      "tipo_nombre": "Prisión preventiva",
+      "fecha_medida_cautelar": "2024-02-25",
+      "revocacion_medida": false,
+      "observaciones": "Prisión preventiva justificada",
+      "genera_cemci": true
+    },
+    "cemci_creado": true,
+    "cemci_id": 5
+  },
+  "message": "Medida cautelar creada exitosamente. CEMCI creado automáticamente"
+}
+
+# Listar medidas de proceso (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_medida_cautelar": 3,
+      "tipo_nombre": "Prisión preventiva",
+      "fecha_medida_cautelar": "2024-02-25",
+      "revocacion_medida": false,
+      "genera_cemci": true
+    },
+    {
+      "id_medida_cautelar": 1,
+      "tipo_nombre": "Presentación periódica",
+      "fecha_medida_cautelar": "2024-02-20",
+      "revocacion_medida": false,
+      "genera_cemci": false
+    }
+  ]
+}
+
+# Verificar privativas (200)
+{
+  "success": true,
+  "data": {
+    "tiene_medidas_privativas": true
+  }
+}
+
+# Revocar medida (200)
+{
+  "success": true,
+  "data": {
+    "id_medida_cautelar": 1,
+    "revocacion_medida": true,
+    "fecha_revocacion_medida": "2024-03-01"
+  },
+  "message": "Medida cautelar revocada exitosamente"
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "tipo": "Prisión preventiva",
+      "total": 50,
+      "activas": 35,
+      "revocadas": 15,
+      "privativas": 50
+    },
+    {
+      "tipo": "Presentación periódica",
+      "total": 120,
+      "activas": 100,
+      "revocadas": 20,
+      "privativas": 0
+    }
+  ]
+}
+
+# Error: Medida ya revocada (409)
+{
+  "success": false,
+  "error": {
+    "message": "La medida ya está revocada"
+  }
+}
+
+# Error: Proceso sin CJ (400)
+{
+  "success": false,
+  "error": {
+    "message": "El proceso debe tener una CJ antes de aplicar medidas cautelares"
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear medida NO privativa
+curl -X POST "http://localhost:3000/api/medidas-cautelares" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"tipo_medida_cautelar_id\":1,\"fecha_medida_cautelar\":\"2024-02-20\"}"
+
+# Crear medida PRIVATIVA (auto-crea CEMCI)
+curl -X POST "http://localhost:3000/api/medidas-cautelares" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"tipo_medida_cautelar_id\":3,\"fecha_medida_cautelar\":\"2024-02-25\"}"
+
+# Ver medidas del proceso
+curl -X GET "http://localhost:3000/api/medidas-cautelares/proceso/1" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Revocar medida
+curl -X PUT "http://localhost:3000/api/medidas-cautelares/1/revocar" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{}"

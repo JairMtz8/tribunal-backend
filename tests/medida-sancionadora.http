@@ -1,0 +1,433 @@
+# =====================================================
+# PRUEBAS DE API - MEDIDAS SANCIONADORAS
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# PREREQUISITO: Crear tipos de medidas sancionadoras
+# =====================================================
+
+### Crear tipo NO privativo (Libertad asistida)
+POST {{baseUrl}}/catalogos/tipo_medida_sancionadora
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Libertad asistida",
+  "es_privativa": false
+}
+# Respuesta: { "id_tipo_medida_sancionadora": 1 }
+
+### Crear tipo NO privativo (Trabajo comunitario)
+POST {{baseUrl}}/catalogos/tipo_medida_sancionadora
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Trabajo en favor de la comunidad",
+  "es_privativa": false
+}
+# Respuesta: { "id_tipo_medida_sancionadora": 2 }
+
+### Crear tipo PRIVATIVO (Internamiento)
+POST {{baseUrl}}/catalogos/tipo_medida_sancionadora
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Internamiento",
+  "es_privativa": true
+}
+# Respuesta: { "id_tipo_medida_sancionadora": 3 }
+
+### Crear tipo NO privativo (Reparación del daño)
+POST {{baseUrl}}/catalogos/tipo_medida_sancionadora
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Reparación del daño material",
+  "es_privativa": false
+}
+# Respuesta: { "id_tipo_medida_sancionadora": 4 }
+
+# =====================================================
+# 1. CREAR MEDIDAS SANCIONADORAS
+# =====================================================
+
+### Crear medida NO privativa (Libertad asistida - 1 año)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_sancionadora_id": 1,
+  "plazo_anios": 1,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+### Crear medida NO privativa (Trabajo comunitario - 6 meses)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_sancionadora_id": 2,
+  "plazo_anios": 0,
+  "plazo_meses": 6,
+  "plazo_dias": 0
+}
+
+### Crear medida PRIVATIVA (Internamiento - 2 años)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 2,
+  "tipo_medida_sancionadora_id": 3,
+  "plazo_anios": 2,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+### Crear medida con plazo mixto (1 año, 6 meses, 15 días)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 3,
+  "tipo_medida_sancionadora_id": 1,
+  "plazo_anios": 1,
+  "plazo_meses": 6,
+  "plazo_dias": 15
+}
+
+### Crear medida solo en días (100 días)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 4,
+  "tipo_medida_sancionadora_id": 2,
+  "plazo_anios": 0,
+  "plazo_meses": 0,
+  "plazo_dias": 100
+}
+
+# =====================================================
+# 2. CONSULTAR MEDIDAS
+# =====================================================
+
+### Obtener medidas de un proceso
+GET {{baseUrl}}/medidas-sancionadoras/proceso/1
+Authorization: Bearer {{token}}
+
+### Obtener medida por ID
+GET {{baseUrl}}/medidas-sancionadoras/1
+Authorization: Bearer {{token}}
+
+### Verificar si proceso tiene medidas privativas
+GET {{baseUrl}}/medidas-sancionadoras/proceso/1/privativas
+Authorization: Bearer {{token}}
+
+### Obtener todas las medidas privativas
+GET {{baseUrl}}/medidas-sancionadoras/privativas
+Authorization: Bearer {{token}}
+
+### Obtener todas las medidas no privativas
+GET {{baseUrl}}/medidas-sancionadoras/no-privativas
+Authorization: Bearer {{token}}
+
+### Estadísticas por tipo
+GET {{baseUrl}}/medidas-sancionadoras/stats
+Authorization: Bearer {{token}}
+
+### Estadísticas generales
+GET {{baseUrl}}/medidas-sancionadoras/stats/generales
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR MEDIDAS
+# =====================================================
+
+### Actualizar plazo
+PUT {{baseUrl}}/medidas-sancionadoras/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "plazo_anios": 2,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+### Cambiar tipo de medida
+PUT {{baseUrl}}/medidas-sancionadoras/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_medida_sancionadora_id": 3
+}
+
+### Ajustar plazo (reducir)
+PUT {{baseUrl}}/medidas-sancionadoras/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "plazo_anios": 0,
+  "plazo_meses": 6,
+  "plazo_dias": 0
+}
+
+# =====================================================
+# 4. ELIMINAR MEDIDAS
+# =====================================================
+
+### Eliminar medida (Solo Admin)
+DELETE {{baseUrl}}/medidas-sancionadoras/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. FLUJO COMPLETO - PROCESO CON SENTENCIA
+# =====================================================
+
+### 1. Proceso tiene sentencia condenatoria (asume proceso_id = 20)
+
+### 2. Aplicar primera medida (Libertad asistida - 1 año)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_medida_sancionadora_id": 1,
+  "plazo_anios": 1,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+### 3. Aplicar segunda medida (Trabajo comunitario - 200 horas = 100 días)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_medida_sancionadora_id": 2,
+  "plazo_anios": 0,
+  "plazo_meses": 0,
+  "plazo_dias": 100
+}
+
+### 4. Aplicar tercera medida (Reparación del daño)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_medida_sancionadora_id": 4,
+  "plazo_anios": 0,
+  "plazo_meses": 3,
+  "plazo_dias": 0
+}
+
+### 5. Ver todas las medidas del proceso
+GET {{baseUrl}}/medidas-sancionadoras/proceso/20
+Authorization: Bearer {{token}}
+
+### 6. Verificar si tiene medidas privativas
+GET {{baseUrl}}/medidas-sancionadoras/proceso/20/privativas
+Authorization: Bearer {{token}}
+# Respuesta: { "tiene_medidas_privativas": false }
+
+# =====================================================
+# 6. CASO - MEDIDA PRIVATIVA (INTERNAMIENTO)
+# =====================================================
+
+### Aplicar internamiento (2 años, 6 meses)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 30,
+  "tipo_medida_sancionadora_id": 3,
+  "plazo_anios": 2,
+  "plazo_meses": 6,
+  "plazo_dias": 0
+}
+
+### Verificar que tiene medidas privativas
+GET {{baseUrl}}/medidas-sancionadoras/proceso/30/privativas
+Authorization: Bearer {{token}}
+# Respuesta: { "tiene_medidas_privativas": true }
+
+### Ver todas las medidas privativas del sistema
+GET {{baseUrl}}/medidas-sancionadoras/privativas
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. CASO - MÚLTIPLES MEDIDAS MIXTAS
+# =====================================================
+
+### Proceso con medida privativa + no privativas
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 40,
+  "tipo_medida_sancionadora_id": 3,
+  "plazo_anios": 1,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+###
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 40,
+  "tipo_medida_sancionadora_id": 1,
+  "plazo_anios": 0,
+  "plazo_meses": 6,
+  "plazo_dias": 0
+}
+
+### Ver medidas del proceso
+GET {{baseUrl}}/medidas-sancionadoras/proceso/40
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear medida (201)
+{
+  "success": true,
+  "data": {
+    "id_medida": 1,
+    "proceso_id": 1,
+    "tipo_medida_sancionadora_id": 1,
+    "tipo_nombre": "Libertad asistida",
+    "es_privativa": false,
+    "plazo_anios": 1,
+    "plazo_meses": 0,
+    "plazo_dias": 0
+  },
+  "message": "Medida sancionadora creada exitosamente"
+}
+
+# Medidas de un proceso (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_medida": 1,
+      "proceso_id": 1,
+      "tipo_nombre": "Libertad asistida",
+      "es_privativa": false,
+      "plazo_anios": 1,
+      "plazo_meses": 0,
+      "plazo_dias": 0
+    },
+    {
+      "id_medida": 2,
+      "proceso_id": 1,
+      "tipo_nombre": "Trabajo en favor de la comunidad",
+      "es_privativa": false,
+      "plazo_anios": 0,
+      "plazo_meses": 6,
+      "plazo_dias": 0
+    }
+  ]
+}
+
+# Verificar privativas (200)
+{
+  "success": true,
+  "data": {
+    "tiene_medidas_privativas": true
+  }
+}
+
+# Medidas privativas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_medida": 5,
+      "tipo_nombre": "Internamiento",
+      "es_privativa": true,
+      "adolescente_nombre": "Carlos Ramírez",
+      "plazo_anios": 2,
+      "plazo_meses": 6,
+      "plazo_dias": 0
+    }
+  ]
+}
+
+# Estadísticas por tipo (200)
+{
+  "success": true,
+  "data": [
+    {
+      "tipo": "Libertad asistida",
+      "es_privativa": false,
+      "total": 50,
+      "promedio_anios": 1.2,
+      "promedio_meses": 3.5,
+      "promedio_dias": 10.2
+    },
+    {
+      "tipo": "Internamiento",
+      "es_privativa": true,
+      "total": 20,
+      "promedio_anios": 2.5,
+      "promedio_meses": 0,
+      "promedio_dias": 0
+    }
+  ]
+}
+
+# Estadísticas generales (200)
+{
+  "success": true,
+  "data": {
+    "total": 150,
+    "privativas": 30,
+    "no_privativas": 120,
+    "promedio_dias_total": 547.5
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear medida
+curl -X POST "http://localhost:3000/api/medidas-sancionadoras" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"tipo_medida_sancionadora_id\":1,\"plazo_anios\":1}"
+
+# Ver medidas del proceso
+curl -X GET "http://localhost:3000/api/medidas-sancionadoras/proceso/1" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Verificar privativas
+curl -X GET "http://localhost:3000/api/medidas-sancionadoras/proceso/1/privativas" ^
+  -H "Authorization: Bearer TOKEN"

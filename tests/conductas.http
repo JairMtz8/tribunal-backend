@@ -1,0 +1,264 @@
+# =====================================================
+# PRUEBAS DE API - CONDUCTAS (Catálogo de Delitos)
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. LISTAR CONDUCTAS
+# =====================================================
+
+### Obtener todas las conductas
+GET {{baseUrl}}/conductas
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo
+GET {{baseUrl}}/conductas?tipo_conducta=Patrimonial
+Authorization: Bearer {{token}}
+
+### Filtrar por fuero
+GET {{baseUrl}}/conductas?fuero_default=Federal
+Authorization: Bearer {{token}}
+
+### Solo activas
+GET {{baseUrl}}/conductas?activo=true
+Authorization: Bearer {{token}}
+
+### Buscar por nombre
+GET {{baseUrl}}/conductas?search=robo
+Authorization: Bearer {{token}}
+
+### Estadísticas de conductas
+GET {{baseUrl}}/conductas/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 2. CONSULTAR CONDUCTA ESPECÍFICA
+# =====================================================
+
+### Obtener conducta por ID
+GET {{baseUrl}}/conductas/1
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. CREAR CONDUCTAS (Solo Admin)
+# =====================================================
+
+### Crear conducta patrimonial
+POST {{baseUrl}}/conductas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Robo de casa habitación",
+  "descripcion": "Robo cometido en domicilio habitado",
+  "tipo_conducta": "Patrimonial",
+  "fuero_default": "Común"
+}
+
+### Crear conducta federal
+POST {{baseUrl}}/conductas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Tráfico de personas",
+  "descripcion": "Transportar personas con fines de explotación",
+  "tipo_conducta": "Otras",
+  "fuero_default": "Federal"
+}
+
+### Crear conducta sexual
+POST {{baseUrl}}/conductas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Acoso sexual",
+  "tipo_conducta": "Sexual",
+  "fuero_default": "Común"
+}
+
+# =====================================================
+# 4. ACTUALIZAR CONDUCTAS (Solo Admin)
+# =====================================================
+
+### Actualizar descripción
+PUT {{baseUrl}}/conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "descripcion": "Apoderamiento de bien mueble ajeno sin consentimiento del dueño"
+}
+
+### Cambiar tipo de conducta
+PUT {{baseUrl}}/conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_conducta": "Violenta"
+}
+
+### Desactivar conducta
+PUT {{baseUrl}}/conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+# =====================================================
+# 5. USAR CONDUCTAS EN CJ
+# =====================================================
+
+### Crear proceso con conducta del catálogo
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 1,
+  "cj": {
+    "numero_cj": "CJ-2024-050",
+    "fecha_ingreso": "2024-02-15",
+    "tipo_fuero": "Común",
+    "vinculacion": true,
+    "fecha_vinculacion": "2024-02-20",
+    "conducta_id": 1,
+    "conducta_vinculacion": "Robo calificado con violencia en pandilla"
+  }
+}
+
+### Actualizar CJ con conducta
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "conducta_id": 2,
+  "conducta_vinculacion": "Detalles adicionales sobre el delito"
+}
+
+### Consultar CJ con conducta incluida
+GET {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. ELIMINAR CONDUCTA (Solo Admin)
+# =====================================================
+
+### Eliminar conducta (soft delete)
+DELETE {{baseUrl}}/conductas/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Lista de conductas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_conducta": 1,
+      "nombre": "Robo",
+      "descripcion": "Apoderamiento de bien ajeno sin consentimiento",
+      "tipo_conducta": "Patrimonial",
+      "fuero_default": "Común",
+      "activo": true
+    },
+    {
+      "id_conducta": 2,
+      "nombre": "Robo calificado",
+      "descripcion": "Robo con violencia o agravantes",
+      "tipo_conducta": "Patrimonial",
+      "fuero_default": "Común",
+      "activo": true
+    }
+  ]
+}
+
+# CJ con conducta (200)
+{
+  "success": true,
+  "data": {
+    "id_cj": 1,
+    "numero_cj": "CJ-2024-001",
+    "conducta_id": 1,
+    "conducta_vinculacion": "Robo calificado con violencia en pandilla",
+    "conducta": {
+      "id_conducta": 1,
+      "nombre": "Robo",
+      "tipo_conducta": "Patrimonial",
+      "fuero_default": "Común"
+    }
+  }
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "tipo_conducta": "Patrimonial",
+      "total": 7,
+      "activas": 7,
+      "federales": 0,
+      "comunes": 7
+    },
+    {
+      "tipo_conducta": "Violenta",
+      "total": 6,
+      "activas": 6,
+      "federales": 0,
+      "comunes": 6
+    },
+    {
+      "tipo_conducta": "Contra la salud",
+      "total": 3,
+      "activas": 3,
+      "federales": 3,
+      "comunes": 0
+    }
+  ]
+}
+
+# Error: Conducta en uso (409)
+{
+  "success": false,
+  "error": {
+    "message": "No se puede eliminar la conducta porque está siendo utilizada en carpetas judiciales. Puede desactivarla en su lugar."
+  }
+}
+
+# Error: Conducta duplicada (409)
+{
+  "success": false,
+  "error": {
+    "message": "La conducta \"Robo\" ya existe"
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Listar todas
+curl -X GET "http://localhost:3000/api/conductas" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Crear conducta
+curl -X POST "http://localhost:3000/api/conductas" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nombre\":\"Robo de casa habitación\",\"tipo_conducta\":\"Patrimonial\"}"
+
+# Actualizar conducta
+curl -X PUT "http://localhost:3000/api/conductas/1" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"activo\":false}"

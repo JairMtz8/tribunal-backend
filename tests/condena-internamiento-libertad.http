@@ -1,0 +1,419 @@
+# =====================================================
+# PRUEBAS DE API - CONDENA, INTERNAMIENTO Y LIBERTAD
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# CONDENA
+# =====================================================
+
+### Crear condena
+POST {{baseUrl}}/condena
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_reparacion_id": 1,
+  "inicio_computo_sancion": "2024-04-01",
+  "compurga": "2026-04-01"
+}
+
+### Listar todas las condenas
+GET {{baseUrl}}/condena
+Authorization: Bearer {{token}}
+
+### Filtrar condenas cumplidas
+GET {{baseUrl}}/condena?cumplida=true
+Authorization: Bearer {{token}}
+
+### Filtrar condenas activas
+GET {{baseUrl}}/condena?cumplida=false
+Authorization: Bearer {{token}}
+
+### Obtener condena por ID
+GET {{baseUrl}}/condena/1
+Authorization: Bearer {{token}}
+
+### Obtener condena por proceso
+GET {{baseUrl}}/condena/proceso/1
+Authorization: Bearer {{token}}
+
+### Actualizar condena
+PUT {{baseUrl}}/condena/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "compurga": "2025-12-31",
+  "tipo_reparacion_id": 2
+}
+
+### Marcar condena como cumplida
+PUT {{baseUrl}}/condena/1/cumplir
+Authorization: Bearer {{token}}
+
+### Estadísticas de condenas
+GET {{baseUrl}}/condena/stats
+Authorization: Bearer {{token}}
+
+### Eliminar condena (Admin)
+DELETE {{baseUrl}}/condena/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# INTERNAMIENTO
+# =====================================================
+
+### Crear internamiento
+POST {{baseUrl}}/internamiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "fecha_cumplimiento": "2025-06-15"
+}
+
+### Listar todos los internamientos
+GET {{baseUrl}}/internamiento
+Authorization: Bearer {{token}}
+
+### Obtener internamiento por ID
+GET {{baseUrl}}/internamiento/1
+Authorization: Bearer {{token}}
+
+### Obtener internamiento por proceso
+GET {{baseUrl}}/internamiento/proceso/1
+Authorization: Bearer {{token}}
+
+### Actualizar fecha de cumplimiento
+PUT {{baseUrl}}/internamiento/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_cumplimiento": "2025-08-20"
+}
+
+### Obtener internamientos cumplidos
+GET {{baseUrl}}/internamiento/cumplidos
+Authorization: Bearer {{token}}
+
+### Obtener internamientos activos
+GET {{baseUrl}}/internamiento/activos
+Authorization: Bearer {{token}}
+
+### Estadísticas de internamientos
+GET {{baseUrl}}/internamiento/stats
+Authorization: Bearer {{token}}
+
+### Eliminar internamiento (Admin)
+DELETE {{baseUrl}}/internamiento/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# LIBERTAD
+# =====================================================
+
+### Crear libertad con obligaciones
+POST {{baseUrl}}/libertad
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "obligaciones": "Presentarse cada semana al juzgado, no consumir sustancias, asistir a terapia psicológica",
+  "fecha_inicial_ejecucion": "2024-05-01",
+  "termino_obligaciones": "2025-05-01"
+}
+
+### Listar todas las libertades
+GET {{baseUrl}}/libertad
+Authorization: Bearer {{token}}
+
+### Filtrar libertades cumplidas
+GET {{baseUrl}}/libertad?cumplida=true
+Authorization: Bearer {{token}}
+
+### Filtrar libertades activas
+GET {{baseUrl}}/libertad?cumplida=false
+Authorization: Bearer {{token}}
+
+### Obtener libertad por ID
+GET {{baseUrl}}/libertad/1
+Authorization: Bearer {{token}}
+
+### Obtener libertad por proceso
+GET {{baseUrl}}/libertad/proceso/1
+Authorization: Bearer {{token}}
+
+### Actualizar obligaciones
+PUT {{baseUrl}}/libertad/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "obligaciones": "Presentarse cada 15 días, terapia grupal, trabajo comunitario 50 horas"
+}
+
+### Extender plazo
+PUT {{baseUrl}}/libertad/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "termino_obligaciones": "2025-08-01"
+}
+
+### Marcar libertad como cumplida
+PUT {{baseUrl}}/libertad/1/cumplir
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_cumplimiento": "2025-05-01"
+}
+
+### Obtener libertades activas
+GET {{baseUrl}}/libertad/activas
+Authorization: Bearer {{token}}
+
+### Obtener libertades próximas a vencer (30 días)
+GET {{baseUrl}}/libertad/proximas-vencer
+Authorization: Bearer {{token}}
+
+### Obtener libertades próximas a vencer (7 días)
+GET {{baseUrl}}/libertad/proximas-vencer?dias=7
+Authorization: Bearer {{token}}
+
+### Estadísticas de libertades
+GET {{baseUrl}}/libertad/stats
+Authorization: Bearer {{token}}
+
+### Eliminar libertad (Admin)
+DELETE {{baseUrl}}/libertad/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# FLUJO COMPLETO - SENTENCIA CONDENATORIA CON INTERNAMIENTO
+# =====================================================
+
+### 1. Crear medida sancionadora (internamiento 2 años)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_medida_sancionadora_id": 1,
+  "plazo_anios": 2,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+### 2. Crear condena
+POST {{baseUrl}}/condena
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "tipo_reparacion_id": 1,
+  "inicio_computo_sancion": "2024-06-01",
+  "compurga": "2026-06-01"
+}
+
+### 3. Crear internamiento
+POST {{baseUrl}}/internamiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "fecha_cumplimiento": "2026-06-01"
+}
+
+### 4. Ver datos completos
+GET {{baseUrl}}/condena/proceso/20
+Authorization: Bearer {{token}}
+
+GET {{baseUrl}}/internamiento/proceso/20
+Authorization: Bearer {{token}}
+
+# =====================================================
+# FLUJO COMPLETO - SENTENCIA CONDENATORIA CON LIBERTAD
+# =====================================================
+
+### 1. Crear medida sancionadora (libertad asistida 1 año)
+POST {{baseUrl}}/medidas-sancionadoras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 21,
+  "tipo_medida_sancionadora_id": 5,
+  "plazo_anios": 1,
+  "plazo_meses": 0,
+  "plazo_dias": 0
+}
+
+### 2. Crear condena
+POST {{baseUrl}}/condena
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 21,
+  "tipo_reparacion_id": 2,
+  "inicio_computo_sancion": "2024-06-01",
+  "compurga": "2025-06-01"
+}
+
+### 3. Crear libertad con obligaciones
+POST {{baseUrl}}/libertad
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 21,
+  "obligaciones": "Asistir a terapia semanal, trabajo comunitario 100 horas, presentarse al juzgado cada 15 días",
+  "fecha_inicial_ejecucion": "2024-06-01",
+  "termino_obligaciones": "2025-06-01"
+}
+
+### 4. Ver datos completos
+GET {{baseUrl}}/condena/proceso/21
+Authorization: Bearer {{token}}
+
+GET {{baseUrl}}/libertad/proceso/21
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear condena (201)
+{
+  "success": true,
+  "data": {
+    "id_condena": 1,
+    "proceso_id": 1,
+    "tipo_reparacion_id": 1,
+    "tipo_reparacion_nombre": "Simbólica",
+    "inicio_computo_sancion": "2024-04-01",
+    "compurga": "2026-04-01",
+    "cumplida": false,
+    "adolescente_nombre": "Carlos Ramírez"
+  },
+  "message": "Condena creada exitosamente"
+}
+
+# Estadísticas condena (200)
+{
+  "success": true,
+  "data": {
+    "total": 100,
+    "cumplidas": 30,
+    "activas": 70,
+    "con_reparacion": 85
+  }
+}
+
+# Crear internamiento (201)
+{
+  "success": true,
+  "data": {
+    "id_internamiento": 1,
+    "proceso_id": 1,
+    "fecha_cumplimiento": "2025-06-15",
+    "adolescente_nombre": "Pedro López"
+  },
+  "message": "Internamiento creado exitosamente"
+}
+
+# Estadísticas internamiento (200)
+{
+  "success": true,
+  "data": {
+    "total": 50,
+    "cumplidos": 15,
+    "activos": 35
+  }
+}
+
+# Crear libertad (201)
+{
+  "success": true,
+  "data": {
+    "id_libertad": 1,
+    "proceso_id": 1,
+    "obligaciones": "Presentarse semanalmente...",
+    "fecha_inicial_ejecucion": "2024-05-01",
+    "termino_obligaciones": "2025-05-01",
+    "cumplida": false,
+    "adolescente_nombre": "Ana García"
+  },
+  "message": "Libertad creada exitosamente"
+}
+
+# Libertades próximas a vencer (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_libertad": 5,
+      "proceso_id": 10,
+      "adolescente_nombre": "Juan Martínez",
+      "termino_obligaciones": "2024-03-20",
+      "dias_restantes": 5
+    }
+  ]
+}
+
+# Estadísticas libertad (200)
+{
+  "success": true,
+  "data": {
+    "total": 80,
+    "cumplidas": 25,
+    "activas": 55,
+    "vencidas": 10
+  }
+}
+
+# Error: Ya existe condena (409)
+{
+  "success": false,
+  "error": {
+    "message": "Ya existe una condena para este proceso"
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear condena
+curl -X POST "http://localhost:3000/api/condena" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"inicio_computo_sancion\":\"2024-04-01\"}"
+
+# Crear internamiento
+curl -X POST "http://localhost:3000/api/internamiento" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"fecha_cumplimiento\":\"2025-06-15\"}"
+
+# Crear libertad
+curl -X POST "http://localhost:3000/api/libertad" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"obligaciones\":\"Presentarse semanalmente\"}"
+
+# Ver libertades próximas a vencer
+curl -X GET "http://localhost:3000/api/libertad/proximas-vencer?dias=7" ^
+  -H "Authorization: Bearer TOKEN"

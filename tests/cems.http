@@ -1,0 +1,460 @@
+# =====================================================
+# PRUEBAS DE API - CEMS
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. CREAR CEMS (normalmente se auto-crea con CJO)
+# =====================================================
+
+### Crear CEMS manual (si es necesario)
+POST {{baseUrl}}/cems
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cems": "CEMS-2024-001",
+  "cj_id": 1,
+  "cjo_id": 1,
+  "fecha_recepcion": "2024-03-01",
+  "jto": "JTO-001",
+  "cmva": "CMVA-001"
+}
+
+# =====================================================
+# 2. CONSULTAR CEMS
+# =====================================================
+
+### Listar todas las CEMS
+GET {{baseUrl}}/cems
+Authorization: Bearer {{token}}
+
+### Filtrar por estado procesal
+GET {{baseUrl}}/cems?estado_procesal_id=1
+Authorization: Bearer {{token}}
+
+### Filtrar por status
+GET {{baseUrl}}/cems?status=true
+Authorization: Bearer {{token}}
+
+### Obtener CEMS por ID (incluye exhortaciones y seguimientos)
+GET {{baseUrl}}/cems/1
+Authorization: Bearer {{token}}
+
+### Obtener CEMS por CJO
+GET {{baseUrl}}/cems/cjo/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de CEMS
+GET {{baseUrl}}/cems/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR CEMS
+# =====================================================
+
+### Actualizar datos de CEMS
+PUT {{baseUrl}}/cems/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": true,
+  "plan_actividad_fecha_inicio": "2024-03-05",
+  "observaciones": "Adolescente cumpliendo satisfactoriamente"
+}
+
+### Marcar declinación de competencia
+PUT {{baseUrl}}/cems/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "declinacion_comperencia": true,
+  "estado_declina": "Estado de México",
+  "estado_recibe": "Jalisco"
+}
+
+# =====================================================
+# 4. EXHORTACIONES
+# =====================================================
+
+### Crear exhortación de reparación del daño
+POST {{baseUrl}}/cems/exhortacion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 1,
+  "proceso_id": 1,
+  "exhortacion_reparacion_dano": true,
+  "fecha_exhortacion_reparacion_dano": "2024-03-10",
+  "oficio_fiscal": "OF-FGJ-2024-100"
+}
+
+### Crear exhortación de cumplimiento
+POST {{baseUrl}}/cems/exhortacion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 1,
+  "proceso_id": 2,
+  "exhortacion_cumplimiento": true,
+  "fecha_exhortacion_cumplimiento": "2024-03-12",
+  "oficio_fiscal": "OF-FGJ-2024-101"
+}
+
+### Ver exhortaciones de un CEMS
+GET {{baseUrl}}/cems/1/exhortaciones
+Authorization: Bearer {{token}}
+
+### Ver exhortación de un proceso
+GET {{baseUrl}}/cems/exhortacion/proceso/1
+Authorization: Bearer {{token}}
+
+### Actualizar exhortación
+PUT {{baseUrl}}/cems/exhortacion/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "exhortacion_reparacion_dano": true,
+  "exhortacion_cumplimiento": true,
+  "fecha_exhortacion_cumplimiento": "2024-03-15"
+}
+
+### Estadísticas de exhortaciones
+GET {{baseUrl}}/cems/exhortacion/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. SEGUIMIENTOS
+# =====================================================
+
+### Crear seguimiento
+POST {{baseUrl}}/cems/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 1,
+  "proceso_id": 1,
+  "se_libra_orden": true,
+  "cumplimiento_orden": "2024-03-15",
+  "obligaciones_externos": "Trabajo comunitario 100 horas, terapia psicológica semanal"
+}
+
+### Crear seguimiento con cumplimiento anticipado
+POST {{baseUrl}}/cems/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 1,
+  "proceso_id": 2,
+  "cumplimiento_anticipado": true,
+  "causa_ejecutoria": "Buen comportamiento, cumplimiento satisfactorio de obligaciones",
+  "cumplimiento_orden": "2024-04-01"
+}
+
+### Crear seguimiento de sustraído
+POST {{baseUrl}}/cems/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 1,
+  "proceso_id": 3,
+  "se_declaro_sustraido": "2024-03-20",
+  "obligaciones_sustraccion": "Orden de presentación, arraigo domiciliario"
+}
+
+### Ver seguimientos de un CEMS
+GET {{baseUrl}}/cems/1/seguimientos
+Authorization: Bearer {{token}}
+
+### Ver seguimiento de un proceso
+GET {{baseUrl}}/cems/seguimiento/proceso/1
+Authorization: Bearer {{token}}
+
+### Actualizar seguimiento
+PUT {{baseUrl}}/cems/seguimiento/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cumplimiento_anticipado": true,
+  "causa_ejecutoria": "Cumplió todas las obligaciones antes del plazo",
+  "remision_postsancion": "Favorable"
+}
+
+### Ver seguimientos con cumplimiento anticipado
+GET {{baseUrl}}/cems/seguimiento/cumplimiento-anticipado
+Authorization: Bearer {{token}}
+
+### Ver seguimientos de sustraídos
+GET {{baseUrl}}/cems/seguimiento/sustraidos
+Authorization: Bearer {{token}}
+
+### Ver seguimientos con orden librada
+GET {{baseUrl}}/cems/seguimiento/orden-librada
+Authorization: Bearer {{token}}
+
+### Estadísticas de seguimientos
+GET {{baseUrl}}/cems/seguimiento/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. ELIMINAR
+# =====================================================
+
+### Eliminar exhortación (Admin)
+DELETE {{baseUrl}}/cems/exhortacion/5
+Authorization: Bearer {{token}}
+
+### Eliminar seguimiento (Admin)
+DELETE {{baseUrl}}/cems/seguimiento/5
+Authorization: Bearer {{token}}
+
+### Eliminar CEMS (Admin)
+DELETE {{baseUrl}}/cems/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. FLUJO COMPLETO - PROCESO CON SENTENCIA CONDENATORIA
+# =====================================================
+
+### 1. Crear CJO con sentencia condenatoria (auto-crea CEMS)
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-100",
+  "cj_id": 10,
+  "sentencia": "Sentencia condenatoria",
+  "fecha_sentencia": "2024-03-01",
+  "monto_reparacion_dano": 5000.00
+}
+# Respuesta: { "cjo": {...}, "cems_creado": true, "cems_id": 20 }
+
+### 2. Verificar que se creó CEMS
+GET {{baseUrl}}/cems/cjo/1
+Authorization: Bearer {{token}}
+
+### 3. Crear exhortación para reparación del daño
+POST {{baseUrl}}/cems/exhortacion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 20,
+  "proceso_id": 10,
+  "exhortacion_reparacion_dano": true,
+  "fecha_exhortacion_reparacion_dano": "2024-03-05",
+  "oficio_fiscal": "OF-2024-200"
+}
+
+### 4. Crear seguimiento inicial
+POST {{baseUrl}}/cems/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cems_id": 20,
+  "proceso_id": 10,
+  "se_libra_orden": true,
+  "cumplimiento_orden": "2024-03-10",
+  "obligaciones_externos": "Libertad asistida, trabajo comunitario 80 horas"
+}
+
+### 5. Actualizar CEMS con plan de actividades
+PUT {{baseUrl}}/cems/20
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "plan_actividad_fecha_inicio": "2024-03-15",
+  "jto": "JTO-2024-050",
+  "status": true
+}
+
+### 6. Actualizar seguimiento (cumplimiento anticipado)
+PUT {{baseUrl}}/cems/seguimiento/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cumplimiento_anticipado": true,
+  "causa_ejecutoria": "Cumplió todas sus obligaciones satisfactoriamente",
+  "remision_postsancion": "Favorable - recomendación de libertad definitiva"
+}
+
+### 7. Ver CEMS completo
+GET {{baseUrl}}/cems/20
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 8. CASO: SENTENCIA MIXTA (también crea CEMS)
+# =====================================================
+
+### Crear CJO con sentencia mixta
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-101",
+  "cj_id": 11,
+  "sentencia": "Sentencia mixta",
+  "fecha_sentencia": "2024-03-02",
+  "monto_reparacion_dano": 3000.00
+}
+# También crea CEMS automáticamente
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear CEMS (201)
+{
+"success": true,
+"data": {
+"id_cems": 1,
+"numero_cems": "CEMS-2024-001",
+"cj_id": 1,
+"cjo_id": 1,
+"numero_cj": "CJ-2024-001",
+"numero_cjo": "CJO-2024-001",
+"fecha_recepcion": "2024-03-01",
+"status": null,
+"jto": "JTO-001",
+"cmva": "CMVA-001"
+},
+"message": "CEMS creada exitosamente"
+}
+
+# Obtener CEMS completo (200)
+{
+"success": true,
+"data": {
+"id_cems": 1,
+"numero_cems": "CEMS-1-...",
+"cj_id": 1,
+"cjo_id": 1,
+"exhortaciones": [
+{
+"id_exhortacion": 1,
+"proceso_id": 1,
+"adolescente_nombre": "Carlos Ramírez",
+"exhortacion_reparacion_dano": true,
+"fecha_exhortacion_reparacion_dano": "2024-03-10",
+"oficio_fiscal": "OF-2024-100"
+}
+],
+"seguimientos": [
+{
+"id_seguimiento": 1,
+"proceso_id": 1,
+"adolescente_nombre": "Carlos Ramírez",
+"cumplimiento_anticipado": false,
+"se_libra_orden": true,
+"cumplimiento_orden": "2024-03-15"
+}
+]
+}
+}
+
+# Estadísticas CEMS (200)
+{
+"success": true,
+"data": {
+"total": 50,
+"con_cemci": 20,
+"sin_cemci": 30,
+"activos": 35,
+"inactivos": 15,
+"con_declinacion": 5
+}
+}
+
+# Estadísticas Exhortaciones (200)
+{
+"success": true,
+"data": {
+"total": 100,
+"reparacion_dano": 60,
+"cumplimiento": 40
+}
+}
+
+# Estadísticas Seguimientos (200)
+{
+"success": true,
+"data": {
+"total": 100,
+"cumplimiento_anticipado": 25,
+"con_orden_librada": 80,
+"sustraidos": 10
+}
+}
+
+# Cumplimiento anticipado (200)
+{
+"success": true,
+"data": [
+{
+"id_seguimiento": 5,
+"cems_id": 1,
+"numero_cems": "CEMS-1-...",
+"proceso_id": 1,
+"adolescente_nombre": "Carlos Ramírez",
+"cumplimiento_anticipado": true,
+"causa_ejecutoria": "Buen comportamiento",
+"cumplimiento_orden": "2024-03-15"
+}
+]
+}
+
+# Error: Ya existe exhortación (409)
+{
+"success": false,
+"error": {
+"message": "Ya existe una exhortación de CEMS para este proceso"
+}
+}
+
+# Error: Ya existe seguimiento (409)
+{
+"success": false,
+"error": {
+"message": "Ya existe un seguimiento de CEMS para este proceso"
+}
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear exhortación
+curl -X POST "http://localhost:3000/api/cems/exhortacion" ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"cems_id\":1,\"proceso_id\":1,\"exhortacion_reparacion_dano\":true}"
+
+# Crear seguimiento
+curl -X POST "http://localhost:3000/api/cems/seguimiento" ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"cems_id\":1,\"proceso_id\":1,\"se_libra_orden\":true}"
+
+# Ver CEMS completo
+curl -X GET "http://localhost:3000/api/cems/1" ^
+-H "Authorization: Bearer TOKEN"
+
+# Ver cumplimiento anticipado
+curl -X GET "http://localhost:3000/api/cems/seguimiento/cumplimiento-anticipado" ^
+-H "Authorization: Bearer TOKEN"

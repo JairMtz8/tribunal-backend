@@ -74,20 +74,20 @@ const create = async (cjData) => {
     }
 
     const sql = `
-    INSERT INTO cj (
-      numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
-      tipo_narcotico_asegurado, peso_narcotico_gramos,
-      control, lesiones, fecha_control, fecha_formulacion,
-      vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
-      suspension_condicional_proceso_prueba, plazo_suspension,
-      fecha_suspension, fecha_terminacion_suspension,
-      audiencia_intermedia, fecha_audiencia_intermedia,
-      estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
-      medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
-      corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
-      observaciones, observaciones_adicionales, domicilio_hechos_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+        INSERT INTO cj (
+            numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
+            tipo_narcotico_asegurado, peso_narcotico_gramos,
+            control, lesiones, fecha_control, fecha_formulacion,
+            vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
+            suspension_condicional_proceso_prueba, plazo_suspension,
+            fecha_suspension, fecha_terminacion_suspension,
+            audiencia_intermedia, fecha_audiencia_intermedia,
+            estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
+            medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
+            corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
+            observaciones, observaciones_adicionales, domicilio_hechos_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
     const result = await executeQuery(sql, [
         numero_cj,
@@ -135,15 +135,15 @@ const getAll = async (filters = {}) => {
     const { search, tipo_fuero, vinculacion, reincidente } = filters;
 
     let sql = `
-    SELECT 
-      c.*,
-      d.municipio as domicilio_hechos_municipio,
-      d.calle_numero as domicilio_hechos_calle,
-      d.colonia as domicilio_hechos_colonia
-    FROM cj c
-    LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
-    WHERE 1=1
-  `;
+        SELECT
+            c.*,
+            d.municipio as domicilio_hechos_municipio,
+            d.calle_numero as domicilio_hechos_calle,
+            d.colonia as domicilio_hechos_colonia
+        FROM cj c
+                 LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
+        WHERE 1=1
+    `;
 
     const params = [];
 
@@ -177,16 +177,16 @@ const getAll = async (filters = {}) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      c.*,
-      d.id_domicilio as domicilio_hechos_id,
-      d.municipio as domicilio_hechos_municipio,
-      d.calle_numero as domicilio_hechos_calle,
-      d.colonia as domicilio_hechos_colonia
-    FROM cj c
-    LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
-    WHERE c.id_cj = ?
-  `;
+        SELECT
+            c.*,
+            d.id_domicilio as domicilio_hechos_id,
+            d.municipio as domicilio_hechos_municipio,
+            d.calle_numero as domicilio_hechos_calle,
+            d.colonia as domicilio_hechos_colonia
+        FROM cj c
+                 LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
+        WHERE c.id_cj = ?
+    `;
 
     const [cj] = await executeQuery(sql, [id]);
 
@@ -268,10 +268,10 @@ const update = async (id, cjData) => {
     values.push(id);
 
     const sql = `
-    UPDATE cj 
-    SET ${updates.join(', ')}
-    WHERE id_cj = ?
-  `;
+        UPDATE cj
+        SET ${updates.join(', ')}
+        WHERE id_cj = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);

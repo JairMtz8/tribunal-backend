@@ -1,0 +1,420 @@
+# =====================================================
+# PRUEBAS DE API - AUDIENCIAS
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. CREAR AUDIENCIAS
+# =====================================================
+
+### Crear audiencia para CJ (audiencia de control)
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "cj_id": 1,
+  "fecha_audiencia": "2024-03-15 10:00:00",
+  "tipo": "Audiencia de control",
+  "observaciones": "Primera audiencia del proceso"
+}
+
+### Crear audiencia para CJO (audiencia de debate)
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "cjo_id": 1,
+  "fecha_audiencia": "2024-04-20 09:00:00",
+  "tipo": "Audiencia de debate",
+  "observaciones": "Juicio oral"
+}
+
+### Crear audiencia para CEMCI
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "cemci_id": 1,
+  "fecha_audiencia": "2024-03-25 11:00:00",
+  "tipo": "Audiencia de seguimiento CEMCI",
+  "observaciones": "Revisión de cumplimiento de medida cautelar"
+}
+
+### Crear audiencia para CEMS
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "cems_id": 1,
+  "fecha_audiencia": "2024-05-10 14:00:00",
+  "tipo": "Audiencia de ejecución",
+  "observaciones": "Revisión de cumplimiento de medida sancionadora"
+}
+
+### Crear audiencia intermedia
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "cj_id": 1,
+  "fecha_audiencia": "2024-03-30 10:30:00",
+  "tipo": "Audiencia intermedia"
+}
+
+### Crear audiencia de vinculación
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "cj_id": 1,
+  "fecha_audiencia": "2024-03-18 09:30:00",
+  "tipo": "Audiencia de vinculación a proceso"
+}
+
+# =====================================================
+# 2. CONSULTAR AUDIENCIAS
+# =====================================================
+
+### Listar todas las audiencias
+GET {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo
+GET {{baseUrl}}/audiencias?tipo=control
+Authorization: Bearer {{token}}
+
+### Filtrar por rango de fechas
+GET {{baseUrl}}/audiencias?fecha_desde=2024-03-01&fecha_hasta=2024-03-31
+Authorization: Bearer {{token}}
+
+### Obtener audiencia por ID
+GET {{baseUrl}}/audiencias/1
+Authorization: Bearer {{token}}
+
+### Audiencias de un proceso
+GET {{baseUrl}}/audiencias/proceso/1
+Authorization: Bearer {{token}}
+
+### Audiencias de una carpeta CJ
+GET {{baseUrl}}/audiencias/carpeta/CJ/1
+Authorization: Bearer {{token}}
+
+### Audiencias de una carpeta CJO
+GET {{baseUrl}}/audiencias/carpeta/CJO/1
+Authorization: Bearer {{token}}
+
+### Audiencias de una carpeta CEMCI
+GET {{baseUrl}}/audiencias/carpeta/CEMCI/1
+Authorization: Bearer {{token}}
+
+### Audiencias de una carpeta CEMS
+GET {{baseUrl}}/audiencias/carpeta/CEMS/1
+Authorization: Bearer {{token}}
+
+### Audiencias próximas (siguientes 30 días)
+GET {{baseUrl}}/audiencias/proximas
+Authorization: Bearer {{token}}
+
+### Audiencias próximas (siguientes 7 días)
+GET {{baseUrl}}/audiencias/proximas?dias=7
+Authorization: Bearer {{token}}
+
+### Audiencias del día (hoy)
+GET {{baseUrl}}/audiencias/del-dia
+Authorization: Bearer {{token}}
+
+### Audiencias de una fecha específica
+GET {{baseUrl}}/audiencias/del-dia?fecha=2024-03-15
+Authorization: Bearer {{token}}
+
+### Estadísticas de audiencias
+GET {{baseUrl}}/audiencias/stats
+Authorization: Bearer {{token}}
+
+### Estadísticas por tipo
+GET {{baseUrl}}/audiencias/stats/tipo
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR AUDIENCIAS
+# =====================================================
+
+### Actualizar fecha
+PUT {{baseUrl}}/audiencias/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_audiencia": "2024-03-16 11:00:00"
+}
+
+### Actualizar tipo y observaciones
+PUT {{baseUrl}}/audiencias/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo": "Audiencia de control (reprogramada)",
+  "observaciones": "Reprogramada por solicitud de la defensa"
+}
+
+### Cambiar carpeta asociada
+PUT {{baseUrl}}/audiencias/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cj_id": 2
+}
+
+# =====================================================
+# 4. ELIMINAR AUDIENCIAS
+# =====================================================
+
+### Eliminar audiencia (Solo Admin)
+DELETE {{baseUrl}}/audiencias/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. FLUJO COMPLETO - PROCESO CON MÚLTIPLES AUDIENCIAS
+# =====================================================
+
+### 1. Crear audiencia de control (inicio)
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "cj_id": 20,
+  "fecha_audiencia": "2024-03-10 10:00:00",
+  "tipo": "Audiencia de control",
+  "observaciones": "Primera comparecencia del adolescente"
+}
+
+### 2. Crear audiencia de vinculación
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "cj_id": 20,
+  "fecha_audiencia": "2024-03-15 09:00:00",
+  "tipo": "Audiencia de vinculación a proceso"
+}
+
+### 3. Crear audiencia intermedia
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "cj_id": 20,
+  "fecha_audiencia": "2024-04-05 11:00:00",
+  "tipo": "Audiencia intermedia"
+}
+
+### 4. Crear audiencia de juicio oral
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "cjo_id": 5,
+  "fecha_audiencia": "2024-04-20 09:00:00",
+  "tipo": "Audiencia de debate (juicio oral)",
+  "observaciones": "Inicio del juicio oral"
+}
+
+### 5. Crear audiencia de sentencia
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "cjo_id": 5,
+  "fecha_audiencia": "2024-05-10 10:00:00",
+  "tipo": "Audiencia de lectura de sentencia"
+}
+
+### 6. Crear audiencia de ejecución (CEMS)
+POST {{baseUrl}}/audiencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 20,
+  "cems_id": 10,
+  "fecha_audiencia": "2024-06-01 14:00:00",
+  "tipo": "Audiencia de seguimiento de ejecución",
+  "observaciones": "Primera revisión de cumplimiento"
+}
+
+### 7. Ver todas las audiencias del proceso
+GET {{baseUrl}}/audiencias/proceso/20
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. AGENDA DEL DÍA - USO PRÁCTICO
+# =====================================================
+
+### Ver agenda de hoy
+GET {{baseUrl}}/audiencias/del-dia
+Authorization: Bearer {{token}}
+
+### Ver audiencias de mañana
+GET {{baseUrl}}/audiencias/del-dia?fecha=2024-03-16
+Authorization: Bearer {{token}}
+
+### Ver audiencias de la próxima semana
+GET {{baseUrl}}/audiencias/proximas?dias=7
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear audiencia (201)
+{
+  "success": true,
+  "data": {
+    "id_audiencia": 1,
+    "proceso_id": 1,
+    "cj_id": 1,
+    "numero_cj": "CJ-2024-001",
+    "fecha_audiencia": "2024-03-15T10:00:00.000Z",
+    "tipo": "Audiencia de control",
+    "observaciones": "Primera audiencia del proceso",
+    "adolescente_nombre": "Carlos Ramírez",
+    "adolescente_iniciales": "CR"
+  },
+  "message": "Audiencia creada exitosamente"
+}
+
+# Listar audiencias (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_audiencia": 1,
+      "proceso_id": 1,
+      "fecha_audiencia": "2024-03-15T10:00:00.000Z",
+      "tipo": "Audiencia de control",
+      "adolescente_nombre": "Carlos Ramírez"
+    }
+  ]
+}
+
+# Audiencias del proceso (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_audiencia": 1,
+      "fecha_audiencia": "2024-03-15T10:00:00.000Z",
+      "tipo": "Audiencia de control",
+      "numero_cj": "CJ-2024-001"
+    },
+    {
+      "id_audiencia": 2,
+      "fecha_audiencia": "2024-04-20T09:00:00.000Z",
+      "tipo": "Audiencia de debate",
+      "numero_cjo": "CJO-2024-001"
+    }
+  ]
+}
+
+# Audiencias próximas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_audiencia": 5,
+      "fecha_audiencia": "2024-03-16T09:00:00.000Z",
+      "tipo": "Audiencia intermedia",
+      "adolescente_nombre": "Ana López",
+      "numero_cj": "CJ-2024-005"
+    },
+    {
+      "id_audiencia": 8,
+      "fecha_audiencia": "2024-03-20T10:00:00.000Z",
+      "tipo": "Audiencia de debate",
+      "adolescente_nombre": "Pedro Martínez",
+      "numero_cjo": "CJO-2024-003"
+    }
+  ],
+  "message": "Audiencias próximas obtenidas exitosamente"
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": {
+    "total": 250,
+    "audiencias_cj": 120,
+    "audiencias_cjo": 80,
+    "audiencias_cemci": 30,
+    "audiencias_cems": 20,
+    "proximas": 45,
+    "pasadas": 205
+  }
+}
+
+# Estadísticas por tipo (200)
+{
+  "success": true,
+  "data": [
+    { "tipo": "Audiencia de control", "total": 80 },
+    { "tipo": "Audiencia de debate", "total": 50 },
+    { "tipo": "Audiencia intermedia", "total": 40 },
+    { "tipo": "Audiencia de vinculación a proceso", "total": 30 }
+  ]
+}
+
+# Error: Debe especificar carpeta (400)
+{
+  "success": false,
+  "error": {
+    "message": "Debe especificar al menos una carpeta (cj_id, cjo_id, cemci_id o cems_id)"
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear audiencia
+curl -X POST "http://localhost:3000/api/audiencias" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"proceso_id\":1,\"cj_id\":1,\"fecha_audiencia\":\"2024-03-15 10:00:00\",\"tipo\":\"Audiencia de control\"}"
+
+# Ver audiencias del día
+curl -X GET "http://localhost:3000/api/audiencias/del-dia" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Ver audiencias próximas
+curl -X GET "http://localhost:3000/api/audiencias/proximas?dias=7" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Ver audiencias de un proceso
+curl -X GET "http://localhost:3000/api/audiencias/proceso/1" ^
+  -H "Authorization: Bearer TOKEN"

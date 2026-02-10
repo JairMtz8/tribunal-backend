@@ -1,0 +1,464 @@
+# =====================================================
+# PRUEBAS DE API - VÍCTIMAS
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. CREAR VÍCTIMAS
+# =====================================================
+
+### Crear víctima completa
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "María González Pérez",
+  "iniciales": "MGP",
+  "sexo": "Mujer",
+  "edad": 25,
+  "es_menor": false
+}
+
+### Crear víctima menor
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan Carlos López",
+  "iniciales": "JCL",
+  "sexo": "Hombre",
+  "edad": 16,
+  "es_menor": true
+}
+
+### Crear víctima mínima (solo nombre)
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Ana Martínez"
+}
+
+### Crear víctima sin especificar edad
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Pedro Ramírez",
+  "sexo": "Hombre"
+}
+
+# =====================================================
+# 2. CONSULTAR VÍCTIMAS
+# =====================================================
+
+### Listar todas las víctimas
+GET {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+
+### Con paginación
+GET {{baseUrl}}/victimas?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Filtrar por sexo
+GET {{baseUrl}}/victimas?sexo=Mujer
+Authorization: Bearer {{token}}
+
+### Solo menores
+GET {{baseUrl}}/victimas?es_menor=true
+Authorization: Bearer {{token}}
+
+### Buscar por nombre
+GET {{baseUrl}}/victimas?search=María
+Authorization: Bearer {{token}}
+
+### Obtener víctima por ID (incluye procesos donde está involucrada)
+GET {{baseUrl}}/victimas/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de víctimas
+GET {{baseUrl}}/victimas/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR VÍCTIMAS
+# =====================================================
+
+### Actualizar datos completos
+PUT {{baseUrl}}/victimas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "María González Pérez (Actualizado)",
+  "edad": 26
+}
+
+### Cambiar solo edad
+PUT {{baseUrl}}/victimas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "edad": 27
+}
+
+### Marcar como menor
+PUT {{baseUrl}}/victimas/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "es_menor": true
+}
+
+# =====================================================
+# 4. ASOCIAR VÍCTIMAS A PROCESOS
+# =====================================================
+
+### Asociar víctima a proceso
+POST {{baseUrl}}/procesos/1/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "victima_id": 1
+}
+
+### Asociar múltiples víctimas a un proceso
+POST {{baseUrl}}/procesos/1/victimas/multiples
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "victimas_ids": [1, 2, 3]
+}
+
+### Obtener víctimas de un proceso
+GET {{baseUrl}}/procesos/1/victimas
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. DESASOCIAR VÍCTIMAS DE PROCESOS
+# =====================================================
+
+### Desasociar víctima de proceso
+DELETE {{baseUrl}}/procesos/1/victimas/1
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. ELIMINAR VÍCTIMAS
+# =====================================================
+
+### Eliminar víctima (solo si no está asociada a procesos)
+DELETE {{baseUrl}}/victimas/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. FLUJO COMPLETO - CREAR PROCESO CON VÍCTIMAS
+# =====================================================
+
+### 1. Crear adolescente
+POST {{baseUrl}}/adolescentes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Roberto Díaz",
+  "fecha_nacimiento": "2009-05-20",
+  "sexo": "Hombre"
+}
+# Respuesta: { "id_adolescente": 10 }
+
+### 2. Crear víctima 1
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Laura Sánchez",
+  "sexo": "Mujer",
+  "edad": 30,
+  "es_menor": false
+}
+# Respuesta: { "id_victima": 10 }
+
+### 3. Crear víctima 2
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Méndez",
+  "sexo": "Hombre",
+  "edad": 45,
+  "es_menor": false
+}
+# Respuesta: { "id_victima": 11 }
+
+### 4. Crear proceso con CJ
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 10,
+  "cj": {
+    "numero_cj": "CJ-2024-100",
+    "fecha_ingreso": "2024-02-20",
+    "tipo_fuero": "Común"
+  }
+}
+# Respuesta: { "proceso": { "id_proceso": 10 } }
+
+### 5. Asociar primera víctima
+POST {{baseUrl}}/procesos/10/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "victima_id": 10
+}
+
+### 6. Asociar segunda víctima
+POST {{baseUrl}}/procesos/10/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "victima_id": 11
+}
+
+### 7. Ver todas las víctimas del proceso
+GET {{baseUrl}}/procesos/10/victimas
+Authorization: Bearer {{token}}
+
+### 8. Ver víctima con sus procesos
+GET {{baseUrl}}/victimas/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 8. CASO DE ROBO CON MÚLTIPLES VÍCTIMAS
+# =====================================================
+
+### Crear proceso
+POST {{baseUrl}}/procesos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "adolescente_id": 5,
+  "cj": {
+    "numero_cj": "CJ-2024-200",
+    "fecha_ingreso": "2024-02-25",
+    "tipo_fuero": "Común"
+  }
+}
+# Respuesta: { "id_proceso": 20 }
+
+### Crear víctimas del robo
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Tienda Elektra",
+  "iniciales": "TE",
+  "sexo": "N/A"
+}
+# Respuesta: { "id_victima": 20 }
+
+###
+POST {{baseUrl}}/victimas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "José Hernández (Empleado)",
+  "iniciales": "JH",
+  "sexo": "Hombre",
+  "edad": 35
+}
+# Respuesta: { "id_victima": 21 }
+
+### Asociar ambas víctimas al proceso
+POST {{baseUrl}}/procesos/20/victimas/multiples
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "victimas_ids": [20, 21]
+}
+
+### Ver víctimas del caso
+GET {{baseUrl}}/procesos/20/victimas
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear víctima (201)
+{
+  "success": true,
+  "data": {
+    "id_victima": 1,
+    "nombre": "María González Pérez",
+    "iniciales": "MGP",
+    "sexo": "Mujer",
+    "edad": 25,
+    "es_menor": false
+  },
+  "message": "Víctima creada exitosamente"
+}
+
+# Listar víctimas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_victima": 1,
+      "nombre": "María González Pérez",
+      "iniciales": "MGP",
+      "sexo": "Mujer",
+      "edad": 25,
+      "es_menor": false
+    },
+    {
+      "id_victima": 2,
+      "nombre": "Juan Carlos López",
+      "iniciales": "JCL",
+      "sexo": "Hombre",
+      "edad": 16,
+      "es_menor": true
+    }
+  ]
+}
+
+# Víctima con procesos (200)
+{
+  "success": true,
+  "data": {
+    "id_victima": 1,
+    "nombre": "María González Pérez",
+    "sexo": "Mujer",
+    "edad": 25,
+    "es_menor": false,
+    "procesos": [
+      {
+        "id_proceso": 1,
+        "adolescente_id": 5,
+        "adolescente_nombre": "Carlos Ramírez",
+        "adolescente_iniciales": "CR"
+      }
+    ]
+  }
+}
+
+# Víctimas de proceso (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_victima": 1,
+      "nombre": "María González Pérez",
+      "sexo": "Mujer",
+      "edad": 25,
+      "es_menor": false,
+      "proceso_id": 1
+    },
+    {
+      "id_victima": 2,
+      "nombre": "Juan Carlos López",
+      "sexo": "Hombre",
+      "edad": 16,
+      "es_menor": true,
+      "proceso_id": 1
+    }
+  ]
+}
+
+# Asociar múltiples víctimas (200)
+{
+  "success": true,
+  "data": [
+    { "victimaId": 1, "status": "asociada" },
+    { "victimaId": 2, "status": "asociada" },
+    { "victimaId": 3, "status": "error", "mensaje": "La víctima ya está asociada a este proceso" }
+  ],
+  "message": "Proceso de asociación completado"
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": {
+    "total": 150,
+    "hombres": 75,
+    "mujeres": 70,
+    "menores": 25,
+    "mayores": 125
+  }
+}
+
+# Error: Víctima ya asociada (409)
+{
+  "success": false,
+  "error": {
+    "message": "La víctima ya está asociada a este proceso"
+  }
+}
+
+# Error: No se puede eliminar (409)
+{
+  "success": false,
+  "error": {
+    "message": "No se puede eliminar la víctima porque está asociada a 2 proceso(s). Primero debe desasociarla de los procesos."
+  }
+}
+
+# Error: Proceso no existe (404)
+{
+  "success": false,
+  "error": {
+    "message": "El proceso no existe"
+  }
+}
+
+# Error: Víctima no existe (404)
+{
+  "success": false,
+  "error": {
+    "message": "La víctima no existe"
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear víctima
+curl -X POST "http://localhost:3000/api/victimas" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nombre\":\"María González\",\"sexo\":\"Mujer\",\"edad\":25}"
+
+# Asociar víctima a proceso
+curl -X POST "http://localhost:3000/api/procesos/1/victimas" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"victima_id\":1}"
+
+# Ver víctimas de proceso
+curl -X GET "http://localhost:3000/api/procesos/1/victimas" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Desasociar víctima
+curl -X DELETE "http://localhost:3000/api/procesos/1/victimas/1" ^
+  -H "Authorization: Bearer TOKEN"

@@ -86,6 +86,10 @@ app.use('/api/auth', authRoutes);
 const catalogoRoutes = require('./routes/catalogoRoutes');
 app.use('/api/catalogos', catalogoRoutes);
 
+// Conductas (Catálogo de Delitos)
+const conductaRoutes = require('./routes/conductaRoutes');
+app.use('/api/conductas', conductaRoutes);
+
 // Domicilios
 const domicilioRoutes = require('./routes/domicilioRoutes');
 app.use('/api/domicilios', domicilioRoutes);
@@ -101,6 +105,54 @@ app.use('/api/procesos', procesoRoutes);
 // CJ (Carpeta Judicial)
 const cjRoutes = require('./routes/cjRoutes');
 app.use('/api/cj', cjRoutes);
+
+// CJO (Carpeta Juicio Oral)
+const cjoRoutes = require('./routes/cjoRoutes');
+app.use('/api/cjo', cjoRoutes);
+
+// CEMCI (Carpeta Ejecución Medida Cautelar Internamiento)
+const cemciRoutes = require('./routes/cemciRoutes');
+app.use('/api/cemci', cemciRoutes);
+
+// CEMS (Carpeta Ejecución Medidas Sancionadoras)
+const cemsRoutes = require('./routes/cemsRoutes');
+app.use('/api/cems', cemsRoutes);
+
+// Audiencias
+const audienciaRoutes = require('./routes/audienciaRoutes');
+app.use('/api/audiencias', audienciaRoutes);
+
+// Medidas Sancionadoras
+const medidaSancionadoraRoutes = require('./routes/medidaSancionadoraRoutes');
+app.use('/api/medidas-sancionadoras', medidaSancionadoraRoutes);
+
+// Condena
+const condenaRoutes = require('./routes/condenaRoutes');
+app.use('/api/condena', condenaRoutes);
+
+// Internamiento
+const internamientoRoutes = require('./routes/internamientoRoutes');
+app.use('/api/internamiento', internamientoRoutes);
+
+// Libertad
+const libertadRoutes = require('./routes/libertadRoutes');
+app.use('/api/libertad', libertadRoutes);
+
+// CJ Conductas (Conductas del Adolescente)
+const cjConductaRoutes = require('./routes/cjConductaRoutes');
+app.use('/api/cj-conductas', cjConductaRoutes);
+
+// Víctimas
+const victimaRoutes = require('./routes/victimaRoutes');
+app.use('/api', victimaRoutes);
+
+// Actores Jurídicos
+const actorJuridicoRoutes = require('./routes/actorJuridicoRoutes');
+app.use('/api', actorJuridicoRoutes);
+
+// Medidas Cautelares
+const medidaCautelarRoutes = require('./routes/medidaCautelarRoutes');
+app.use('/api/medidas-cautelares', medidaCautelarRoutes);
 
 // ===================================================
 // MIDDLEWARE DE MANEJO DE ERRORES

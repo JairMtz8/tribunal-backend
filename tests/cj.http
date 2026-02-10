@@ -1,0 +1,333 @@
+# =====================================================
+# PRUEBAS DE API - CJ (CARPETA JUDICIAL)
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# NOTA: CJ normalmente se crea junto con el proceso
+# Estas pruebas son para gestionar CJ existentes
+# =====================================================
+
+# =====================================================
+# 1. CONSULTAR CJ
+# =====================================================
+
+### Listar todas las CJ
+GET {{baseUrl}}/cj
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo de fuero
+GET {{baseUrl}}/cj?tipo_fuero=Común
+Authorization: Bearer {{token}}
+
+### Filtrar fuero federal
+GET {{baseUrl}}/cj?tipo_fuero=Federal
+Authorization: Bearer {{token}}
+
+### Obtener CJ por ID
+GET {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de CJ
+GET {{baseUrl}}/cj/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 2. ACTUALIZAR CJ
+# =====================================================
+
+### Actualizar datos básicos
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_ingreso": "2024-02-15",
+  "tipo_fuero": "Común"
+}
+
+### Actualizar documento AMPEA
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_ampea": "AMPEA-2024-001",
+  "fecha_ingreso": "2024-02-15"
+}
+
+### Registrar narcóticos asegurados
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_narcotico_asegurado": "Marihuana",
+  "peso_narcotico_gramos": 150.50
+}
+
+### Actualizar control y audiencias
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "control": true,
+  "fecha_control": "2024-02-20",
+  "fecha_formulacion": "2024-02-20"
+}
+
+### Registrar vinculación a proceso
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vinculacion": true,
+  "fecha_vinculacion": "2024-02-25",
+  "conducta_vinculacion": "Vinculado por robo calificado con uso de violencia"
+}
+
+### Registrar declaración del adolescente
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "declaro": true
+}
+
+### Suspensión condicional del proceso
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "suspension_condicional_proceso_prueba": true,
+  "plazo_suspension": "6 meses",
+  "fecha_suspension": "2024-03-01",
+  "fecha_terminacion_suspension": "2024-09-01"
+}
+
+### Audiencia intermedia
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "audiencia_intermedia": true,
+  "fecha_audiencia_intermedia": "2024-03-10"
+}
+
+### Marcar como reincidente
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reincidente": true
+}
+
+### Registrar sustracción
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sustraido": true,
+  "fecha_sustraccion": "2024-03-15"
+}
+
+### Medidas de protección
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "medidas_proteccion": "Prohibición de acercarse a la víctima, arraigo domiciliario"
+}
+
+### Apelación
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_toca_apelacion": "TOCA-2024-050"
+}
+
+### Corporación ejecutora
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "corporacion_ejecutora": "Policía Municipal de Ciudad de México"
+}
+
+### Representante PP NNyA
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "representante_pp_nnya": "Lic. María González",
+  "tipo_representacion_pp_nnya": "Defensoría Pública"
+}
+
+### Lugar de los hechos (domicilio)
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "domicilio_hechos_id": 5
+}
+
+### Observaciones
+PUT {{baseUrl}}/cj/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "observaciones": "Adolescente cooperativo durante el proceso",
+  "observaciones_adicionales": "Requiere seguimiento psicológico"
+}
+
+# =====================================================
+# 3. FLUJO COMPLETO - CASO COMÚN
+# =====================================================
+
+### 1. Proceso ya creado con CJ (asume proceso_id = 1, cj_id = 10)
+
+### 2. Actualizar CJ con datos iniciales
+PUT {{baseUrl}}/cj/10
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_ingreso": "2024-02-15",
+  "tipo_fuero": "Común",
+  "corporacion_ejecutora": "Policía de Investigación"
+}
+
+### 3. Registrar audiencia de control
+PUT {{baseUrl}}/cj/10
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "control": true,
+  "fecha_control": "2024-02-18",
+  "fecha_formulacion": "2024-02-18"
+}
+
+### 4. Vinculación a proceso
+PUT {{baseUrl}}/cj/10
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vinculacion": true,
+  "fecha_vinculacion": "2024-02-20",
+  "conducta_vinculacion": "Vinculado por robo simple"
+}
+
+### 5. Ver CJ actualizada
+GET {{baseUrl}}/cj/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 4. FLUJO FEDERAL - NARCÓTICOS
+# =====================================================
+
+### Actualizar CJ con datos federales
+PUT {{baseUrl}}/cj/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_fuero": "Federal",
+  "tipo_narcotico_asegurado": "Cocaína",
+  "peso_narcotico_gramos": 250.75,
+  "numero_ampea": "AMPEA-FED-2024-001"
+}
+
+# =====================================================
+# 5. ELIMINAR CJ (Solo Admin)
+# =====================================================
+
+### Eliminar CJ
+DELETE {{baseUrl}}/cj/20
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Listar CJ (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_cj": 1,
+      "numero_cj": "CJ-2024-001",
+      "fecha_ingreso": "2024-02-15",
+      "tipo_fuero": "Común",
+      "control": true,
+      "vinculacion": true,
+      "fecha_vinculacion": "2024-02-25"
+    }
+  ]
+}
+
+# Obtener CJ (200)
+{
+  "success": true,
+  "data": {
+    "id_cj": 1,
+    "numero_cj": "CJ-2024-001",
+    "fecha_ingreso": "2024-02-15",
+    "tipo_fuero": "Común",
+    "numero_ampea": "AMPEA-2024-001",
+    "control": true,
+    "fecha_control": "2024-02-20",
+    "vinculacion": true,
+    "fecha_vinculacion": "2024-02-25",
+    "conducta_vinculacion": "Vinculado por robo",
+    "declaro": true,
+    "reincidente": false,
+    "sustraido": false,
+    "corporacion_ejecutora": "Policía Municipal"
+  }
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": {
+    "total": 150,
+    "fuero_comun": 120,
+    "fuero_federal": 30,
+    "con_vinculacion": 100,
+    "con_control": 140,
+    "reincidentes": 15,
+    "sustraidos": 5
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Actualizar CJ
+curl -X PUT "http://localhost:3000/api/cj/1" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"vinculacion\":true,\"fecha_vinculacion\":\"2024-02-25\"}"
+
+# Ver CJ
+curl -X GET "http://localhost:3000/api/cj/1" ^
+  -H "Authorization: Bearer TOKEN"

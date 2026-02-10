@@ -1,0 +1,522 @@
+# =====================================================
+# PRUEBAS DE API - ACTORES JURÍDICOS
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. CREAR ACTORES JURÍDICOS
+# =====================================================
+
+### Crear defensor público
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Lic. Juan Pérez González",
+  "tipo": "defensa"
+}
+
+### Crear fiscal
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Lic. María López Sánchez",
+  "tipo": "fiscal"
+}
+
+### Crear juez
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juez Carlos Ramírez",
+  "tipo": "juez"
+}
+
+### Crear asesor jurídico
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Lic. Ana Martínez",
+  "tipo": "asesor juridico"
+}
+
+### Crear representante
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Lic. Pedro Hernández",
+  "tipo": "representante"
+}
+
+### Crear juez de apoyo
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juez Jorge Díaz",
+  "tipo": "juez apoyo"
+}
+
+# =====================================================
+# 2. CONSULTAR ACTORES
+# =====================================================
+
+### Listar todos los actores
+GET {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo (defensores)
+GET {{baseUrl}}/actores?tipo=defensa
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo (fiscales)
+GET {{baseUrl}}/actores?tipo=fiscal
+Authorization: Bearer {{token}}
+
+### Buscar por nombre
+GET {{baseUrl}}/actores?search=Juan
+Authorization: Bearer {{token}}
+
+### Obtener actor por ID (incluye procesos)
+GET {{baseUrl}}/actores/1
+Authorization: Bearer {{token}}
+
+### Obtener todos los defensores
+GET {{baseUrl}}/actores/tipo/defensa
+Authorization: Bearer {{token}}
+
+### Obtener todos los fiscales
+GET {{baseUrl}}/actores/tipo/fiscal
+Authorization: Bearer {{token}}
+
+### Estadísticas de actores
+GET {{baseUrl}}/actores/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR ACTORES
+# =====================================================
+
+### Actualizar nombre
+PUT {{baseUrl}}/actores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Lic. Juan Pérez González (Actualizado)"
+}
+
+### Cambiar tipo
+PUT {{baseUrl}}/actores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo": "juez"
+}
+
+# =====================================================
+# 4. ASIGNAR ACTORES A PROCESOS
+# =====================================================
+
+### Asignar defensor a CJ
+POST {{baseUrl}}/procesos/1/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 1
+}
+
+### Asignar fiscal a CJ
+POST {{baseUrl}}/procesos/1/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 2
+}
+
+### Asignar juez a CJ
+POST {{baseUrl}}/procesos/1/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 3
+}
+
+### Asignar defensor DIFERENTE a CJO
+POST {{baseUrl}}/procesos/1/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJO",
+  "actor_id": 5
+}
+
+### Asignar múltiples actores a CEMCI
+POST {{baseUrl}}/procesos/1/actores/multiples
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CEMCI",
+  "actores_ids": [1, 2, 3]
+}
+
+# =====================================================
+# 5. CONSULTAR ACTORES DE PROCESOS
+# =====================================================
+
+### Ver todos los actores de un proceso
+GET {{baseUrl}}/procesos/1/actores
+Authorization: Bearer {{token}}
+
+### Ver actores agrupados por carpeta
+GET {{baseUrl}}/procesos/1/actores/agrupados
+Authorization: Bearer {{token}}
+
+### Ver actores de CJ específicamente
+GET {{baseUrl}}/procesos/1/actores/CJ
+Authorization: Bearer {{token}}
+
+### Ver actores de CJO
+GET {{baseUrl}}/procesos/1/actores/CJO
+Authorization: Bearer {{token}}
+
+### Ver actores de CEMCI
+GET {{baseUrl}}/procesos/1/actores/CEMCI
+Authorization: Bearer {{token}}
+
+### Ver actores de CEMS
+GET {{baseUrl}}/procesos/1/actores/CEMS
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. DESASIGNAR ACTORES
+# =====================================================
+
+### Desasignar defensor de CJ
+DELETE {{baseUrl}}/procesos/1/actores/CJ/1
+Authorization: Bearer {{token}}
+
+### Desasignar fiscal de CEMCI
+DELETE {{baseUrl}}/procesos/1/actores/CEMCI/2
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. ELIMINAR ACTORES
+# =====================================================
+
+### Eliminar actor (solo si no está asignado)
+DELETE {{baseUrl}}/actores/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 8. FLUJO COMPLETO - CREAR PROCESO CON ACTORES
+# =====================================================
+
+### 1. Crear actores jurídicos
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Def. Pub. Roberto Sánchez",
+  "tipo": "defensa"
+}
+# Respuesta: { "id_actor": 10 }
+
+###
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Fiscal Laura González",
+  "tipo": "fiscal"
+}
+# Respuesta: { "id_actor": 11 }
+
+###
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juez Carlos Méndez",
+  "tipo": "juez"
+}
+# Respuesta: { "id_actor": 12 }
+
+### 2. Crear adolescente y proceso (asume que ya existe proceso_id = 20)
+
+### 3. Asignar actores a CJ
+POST {{baseUrl}}/procesos/20/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 10
+}
+
+###
+POST {{baseUrl}}/procesos/20/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 11
+}
+
+###
+POST {{baseUrl}}/procesos/20/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 12
+}
+
+### 4. Ver actores del proceso
+GET {{baseUrl}}/procesos/20/actores/agrupados
+Authorization: Bearer {{token}}
+
+### 5. Cuando se crea CJO, asignar actores diferentes
+POST {{baseUrl}}/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Def. Part. José Ramírez",
+  "tipo": "defensa"
+}
+# Respuesta: { "id_actor": 13 }
+
+###
+POST {{baseUrl}}/procesos/20/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJO",
+  "actor_id": 13
+}
+
+### 6. Ver actores agrupados (ahora tiene defensor diferente en CJO)
+GET {{baseUrl}}/procesos/20/actores/agrupados
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 9. CASO DE CAMBIO DE DEFENSOR
+# =====================================================
+
+### Desasignar defensor anterior de CJ
+DELETE {{baseUrl}}/procesos/1/actores/CJ/1
+Authorization: Bearer {{token}}
+
+### Asignar nuevo defensor a CJ
+POST {{baseUrl}}/procesos/1/actores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_carpeta": "CJ",
+  "actor_id": 5
+}
+
+### Ver cambio reflejado
+GET {{baseUrl}}/procesos/1/actores/CJ
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear actor (201)
+{
+  "success": true,
+  "data": {
+    "id_actor": 1,
+    "nombre": "Lic. Juan Pérez González",
+    "tipo": "defensa"
+  },
+  "message": "Actor jurídico creado exitosamente"
+}
+
+# Listar actores (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_actor": 1,
+      "nombre": "Lic. Juan Pérez González",
+      "tipo": "defensa"
+    },
+    {
+      "id_actor": 2,
+      "nombre": "Lic. María López Sánchez",
+      "tipo": "fiscal"
+    }
+  ]
+}
+
+# Actor con procesos (200)
+{
+  "success": true,
+  "data": {
+    "id_actor": 1,
+    "nombre": "Lic. Juan Pérez González",
+    "tipo": "defensa",
+    "procesos": [
+      {
+        "id_proceso": 1,
+        "adolescente_nombre": "Carlos Ramírez",
+        "tipo_carpeta": "CJ"
+      },
+      {
+        "id_proceso": 1,
+        "adolescente_nombre": "Carlos Ramírez",
+        "tipo_carpeta": "CJO"
+      }
+    ]
+  }
+}
+
+# Asignar actor (201)
+{
+  "success": true,
+  "data": {
+    "procesoId": 1,
+    "tipoCarpeta": "CJ",
+    "actorId": 1,
+    "actor": {
+      "id_actor": 1,
+      "nombre": "Lic. Juan Pérez González",
+      "tipo": "defensa"
+    }
+  },
+  "message": "Actor asignado al proceso exitosamente"
+}
+
+# Actores agrupados (200)
+{
+  "success": true,
+  "data": {
+    "CJ": [
+      {
+        "id_actor": 1,
+        "nombre": "Lic. Juan Pérez González",
+        "tipo": "defensa"
+      },
+      {
+        "id_actor": 2,
+        "nombre": "Lic. María López Sánchez",
+        "tipo": "fiscal"
+      },
+      {
+        "id_actor": 3,
+        "nombre": "Juez Carlos Ramírez",
+        "tipo": "juez"
+      }
+    ],
+    "CJO": [
+      {
+        "id_actor": 5,
+        "nombre": "Def. Part. José Ramírez",
+        "tipo": "defensa"
+      }
+    ],
+    "CEMCI": [],
+    "CEMS": []
+  }
+}
+
+# Asignar múltiples (200)
+{
+  "success": true,
+  "data": [
+    { "actorId": 1, "status": "asignado", "actor": {...} },
+    { "actorId": 2, "status": "asignado", "actor": {...} },
+    { "actorId": 3, "status": "error", "mensaje": "El actor ya está asignado..." }
+  ]
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": [
+    { "tipo": "defensa", "total": 25 },
+    { "tipo": "fiscal", "total": 15 },
+    { "tipo": "juez", "total": 10 },
+    { "tipo": "asesor juridico", "total": 5 }
+  ]
+}
+
+# Error: Actor ya asignado (409)
+{
+  "success": false,
+  "error": {
+    "message": "El actor ya está asignado a este proceso en la carpeta CJ"
+  }
+}
+
+# Error: Combinación nombre+tipo existe (409)
+{
+  "success": false,
+  "error": {
+    "message": "Ya existe un actor con nombre \"Lic. Juan Pérez\" y tipo \"defensa\""
+  }
+}
+
+# Error: No se puede eliminar (409)
+{
+  "success": false,
+  "error": {
+    "message": "No se puede eliminar el actor porque está asignado a 5 proceso(s). Primero debe desasignarlo de los procesos."
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear actor
+curl -X POST "http://localhost:3000/api/actores" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nombre\":\"Lic. Juan Pérez\",\"tipo\":\"defensa\"}"
+
+# Asignar a proceso
+curl -X POST "http://localhost:3000/api/procesos/1/actores" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"tipo_carpeta\":\"CJ\",\"actor_id\":1}"
+
+# Ver actores del proceso
+curl -X GET "http://localhost:3000/api/procesos/1/actores/agrupados" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Desasignar
+curl -X DELETE "http://localhost:3000/api/procesos/1/actores/CJ/1" ^
+  -H "Authorization: Bearer TOKEN"

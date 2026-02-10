@@ -1,0 +1,366 @@
+# =====================================================
+# PRUEBAS DE API - CEMCI
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# NOTA: CEMCI normalmente se auto-crea con medida cautelar privativa
+# =====================================================
+
+# =====================================================
+# 1. CREAR CEMCI (manual si es necesario)
+# =====================================================
+
+### Crear CEMCI manual
+POST {{baseUrl}}/cemci
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cemci": "CEMCI-2024-001",
+  "cj_id": 1,
+  "fecha_recepcion_cemci": "2024-03-01"
+}
+
+### Crear CEMCI con CJO
+POST {{baseUrl}}/cemci
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cemci": "CEMCI-2024-002",
+  "cj_id": 2,
+  "cjo_id": 1,
+  "fecha_recepcion_cemci": "2024-03-01"
+}
+
+# =====================================================
+# 2. CONSULTAR CEMCI
+# =====================================================
+
+### Listar todas las CEMCI
+GET {{baseUrl}}/cemci
+Authorization: Bearer {{token}}
+
+### Filtrar por estado procesal
+GET {{baseUrl}}/cemci?estado_procesal_id=1
+Authorization: Bearer {{token}}
+
+### Filtrar por concluido
+GET {{baseUrl}}/cemci?concluido=Concluido
+Authorization: Bearer {{token}}
+
+### Obtener CEMCI por ID (incluye seguimientos)
+GET {{baseUrl}}/cemci/1
+Authorization: Bearer {{token}}
+
+### Obtener CEMCI por CJ
+GET {{baseUrl}}/cemci/cj/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de CEMCI
+GET {{baseUrl}}/cemci/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR CEMCI
+# =====================================================
+
+### Actualizar datos básicos
+PUT {{baseUrl}}/cemci/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_recepcion_cemci": "2024-03-01",
+  "observaciones": "Adolescente cumpliendo medida cautelar"
+}
+
+### Asociar CJO
+PUT {{baseUrl}}/cemci/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cjo_id": 1
+}
+
+### Actualizar estado procesal
+PUT {{baseUrl}}/cemci/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado_procesal_id": 2
+}
+
+### Marcar como concluido
+PUT {{baseUrl}}/cemci/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "concluido": "Concluido por cumplimiento de medida"
+}
+
+# =====================================================
+# 4. SEGUIMIENTO DE CEMCI
+# =====================================================
+
+### Crear seguimiento
+POST {{baseUrl}}/cemci/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cemci_id": 1,
+  "proceso_id": 1,
+  "fecha_radicacion": "2024-03-05",
+  "obligaciones_plan_actividades": "Asistir a terapia psicológica semanal, no consumir sustancias"
+}
+
+### Crear seguimiento con plan de actividades
+POST {{baseUrl}}/cemci/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cemci_id": 1,
+  "proceso_id": 2,
+  "fecha_aprobacion_plan_actividades": "2024-03-10",
+  "fecha_recepcion_plan_actividades": "2024-03-08",
+  "obligaciones_plan_actividades": "Trabajo comunitario, terapia grupal",
+  "fecha_audiencia_inicial_cemci": "2024-03-12"
+}
+
+### Crear seguimiento con suspensión
+POST {{baseUrl}}/cemci/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cemci_id": 1,
+  "proceso_id": 3,
+  "fecha_suspension": "2024-03-15",
+  "motivo_suspension": "Incumplimiento de obligaciones"
+}
+
+### Ver seguimientos de un CEMCI
+GET {{baseUrl}}/cemci/1/seguimientos
+Authorization: Bearer {{token}}
+
+### Ver seguimiento de un proceso
+GET {{baseUrl}}/cemci/seguimiento/proceso/1
+Authorization: Bearer {{token}}
+
+### Actualizar seguimiento
+PUT {{baseUrl}}/cemci/seguimiento/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ultimo_informe": "Cumpliendo satisfactoriamente las obligaciones",
+  "fecha_aprobacion_plan_actividades": "2024-03-20"
+}
+
+### Ver seguimientos suspendidos
+GET {{baseUrl}}/cemci/seguimiento/suspendidos
+Authorization: Bearer {{token}}
+
+### Estadísticas de seguimientos
+GET {{baseUrl}}/cemci/seguimiento/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. ELIMINAR
+# =====================================================
+
+### Eliminar seguimiento (Admin)
+DELETE {{baseUrl}}/cemci/seguimiento/5
+Authorization: Bearer {{token}}
+
+### Eliminar CEMCI (Admin)
+DELETE {{baseUrl}}/cemci/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. FLUJO COMPLETO - MEDIDA CAUTELAR PRIVATIVA
+# =====================================================
+
+### 1. Aplicar medida cautelar privativa (auto-crea CEMCI)
+POST {{baseUrl}}/medidas-cautelares
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "proceso_id": 1,
+  "tipo_medida_cautelar_id": 1,
+  "fecha_medida_cautelar": "2024-02-25",
+  "observaciones": "Internamiento preventivo por riesgo de fuga"
+}
+# Respuesta incluye: cemci_creado: true, cemci_id: 5
+
+### 2. Verificar CEMCI creado
+GET {{baseUrl}}/cemci/cj/1
+Authorization: Bearer {{token}}
+
+### 3. Crear seguimiento para el proceso
+POST {{baseUrl}}/cemci/seguimiento
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cemci_id": 5,
+  "proceso_id": 1,
+  "fecha_radicacion": "2024-03-01",
+  "fecha_audiencia_inicial_cemci": "2024-03-05",
+  "obligaciones_plan_actividades": "Participar en talleres educativos, terapia individual"
+}
+
+### 4. Actualizar CEMCI con estado procesal
+PUT {{baseUrl}}/cemci/5
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado_procesal_id": 2,
+  "observaciones": "Adolescente en fase de ejecución de medida cautelar"
+}
+
+### 5. Aprobar plan de actividades
+PUT {{baseUrl}}/cemci/seguimiento/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_aprobacion_plan_actividades": "2024-03-10",
+  "fecha_recepcion_plan_actividades": "2024-03-08",
+  "ultimo_informe": "Plan aprobado, inicio de actividades"
+}
+
+### 6. Ver CEMCI completo
+GET {{baseUrl}}/cemci/5
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 7. CASO - SUSPENSIÓN DE SEGUIMIENTO
+# =====================================================
+
+### Registrar suspensión por incumplimiento
+PUT {{baseUrl}}/cemci/seguimiento/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_suspension": "2024-03-20",
+  "motivo_suspension": "Falta de asistencia a terapias, consumo de sustancias detectado"
+}
+
+### Ver todos los suspendidos
+GET {{baseUrl}}/cemci/seguimiento/suspendidos
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear CEMCI (201)
+{
+  "success": true,
+  "data": {
+    "id_cemci": 1,
+    "numero_cemci": "CEMCI-2024-001",
+    "cj_id": 1,
+    "numero_cj": "CJ-2024-001",
+    "fecha_recepcion_cemci": "2024-03-01",
+    "concluido": null
+  },
+  "message": "CEMCI creada exitosamente"
+}
+
+# Obtener CEMCI con seguimientos (200)
+{
+  "success": true,
+  "data": {
+    "id_cemci": 1,
+    "numero_cemci": "CEMCI-1-...",
+    "cj_id": 1,
+    "seguimientos": [
+      {
+        "id_seguimiento": 1,
+        "proceso_id": 1,
+        "adolescente_nombre": "Carlos Ramírez",
+        "fecha_radicacion": "2024-03-05",
+        "obligaciones_plan_actividades": "Terapia semanal",
+        "fecha_suspension": null
+      }
+    ]
+  }
+}
+
+# Estadísticas (200)
+{
+  "success": true,
+  "data": {
+    "total": 50,
+    "con_cjo": 30,
+    "sin_cjo": 20,
+    "concluidas": 15,
+    "activas": 35
+  }
+}
+
+# Estadísticas seguimientos (200)
+{
+  "success": true,
+  "data": {
+    "total": 75,
+    "suspendidos": 10,
+    "radicados": 65,
+    "con_plan_aprobado": 50
+  }
+}
+
+# Seguimientos suspendidos (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_seguimiento": 5,
+      "cemci_id": 1,
+      "numero_cemci": "CEMCI-1-...",
+      "proceso_id": 3,
+      "adolescente_nombre": "Pedro López",
+      "fecha_suspension": "2024-03-15",
+      "motivo_suspension": "Incumplimiento de obligaciones"
+    }
+  ]
+}
+
+# Error: Ya existe seguimiento (409)
+{
+  "success": false,
+  "error": {
+    "message": "Ya existe un seguimiento de CEMCI para este proceso"
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear seguimiento
+curl -X POST "http://localhost:3000/api/cemci/seguimiento" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"cemci_id\":1,\"proceso_id\":1,\"fecha_radicacion\":\"2024-03-05\"}"
+
+# Ver CEMCI completo
+curl -X GET "http://localhost:3000/api/cemci/1" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Ver suspendidos
+curl -X GET "http://localhost:3000/api/cemci/seguimiento/suspendidos" ^
+  -H "Authorization: Bearer TOKEN"

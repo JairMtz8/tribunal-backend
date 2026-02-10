@@ -1,0 +1,367 @@
+# =====================================================
+# PRUEBAS DE API - CJO (CARPETA JUICIO ORAL)
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# 1. CREAR CJO
+# =====================================================
+
+### Crear CJO básica
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-001",
+  "cj_id": 1,
+  "fuero": "Común",
+  "fecha_ingreso": "2024-03-01"
+}
+
+### Crear CJO con sentencia ABSOLUTORIA (NO crea CEMS)
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-002",
+  "cj_id": 2,
+  "fuero": "Común",
+  "fecha_ingreso": "2024-03-01",
+  "sentencia": "Sentencia absolutoria",
+  "fecha_sentencia": "2024-03-15"
+}
+
+### ⭐ Crear CJO con sentencia CONDENATORIA (crea CEMS automáticamente)
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-003",
+  "cj_id": 3,
+  "fuero": "Común",
+  "fecha_ingreso": "2024-03-01",
+  "sentencia": "Sentencia condenatoria",
+  "fecha_sentencia": "2024-03-15",
+  "monto_reparacion_dano": 5000.00
+}
+# Respuesta incluye: cems_creado: true, cems_id: X
+
+### ⭐ Crear CJO con sentencia MIXTA (también crea CEMS)
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-004",
+  "cj_id": 4,
+  "fuero": "Común",
+  "fecha_ingreso": "2024-03-01",
+  "sentencia": "Sentencia mixta",
+  "fecha_sentencia": "2024-03-15",
+  "monto_reparacion_dano": 3000.00
+}
+# Respuesta incluye: cems_creado: true, cems_id: X
+
+### Crear CJO federal
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-FED-2024-001",
+  "cj_id": 5,
+  "fuero": "Federal",
+  "fecha_ingreso": "2024-03-01"
+}
+
+# =====================================================
+# 2. CONSULTAR CJO
+# =====================================================
+
+### Listar todas las CJO
+GET {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+
+### Filtrar por fuero
+GET {{baseUrl}}/cjo?fuero=Común
+Authorization: Bearer {{token}}
+
+### Filtrar por tipo de sentencia
+GET {{baseUrl}}/cjo?sentencia=condenatori
+Authorization: Bearer {{token}}
+
+### Obtener CJO por ID
+GET {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+
+### Obtener CJO por CJ_ID
+GET {{baseUrl}}/cjo/cj/1
+Authorization: Bearer {{token}}
+
+### Estadísticas de CJO
+GET {{baseUrl}}/cjo/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 3. ACTUALIZAR CJO
+# =====================================================
+
+### Actualizar datos básicos
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_auto_apertura": "2024-03-05"
+}
+
+### Agregar sentencia ABSOLUTORIA
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sentencia": "Sentencia absolutoria",
+  "fecha_sentencia": "2024-03-20"
+}
+
+### ⭐ Cambiar a sentencia CONDENATORIA (crea CEMS si no existe)
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sentencia": "Sentencia condenatoria",
+  "fecha_sentencia": "2024-03-20",
+  "monto_reparacion_dano": 8000.00
+}
+# Si antes era absolutoria, ahora crea CEMS automáticamente
+
+### Actualizar monto de reparación
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "monto_reparacion_dano": 10000.00
+}
+
+### Fecha que causó estado
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_causo_estado": "2024-04-01"
+}
+
+### Registrar apelación
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "toca_apelacion": "TOCA-2024-100"
+}
+
+### Sentencia enviada a ejecución
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_sentencia_enviada_ejecucion": "2024-04-05"
+}
+
+### Jueces
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "juez_envia": "Juez Carlos Ramírez",
+  "juez_recibe": "Juez Ana López"
+}
+
+### Compurga totalidad
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "compurga_totalidad": true
+}
+
+### Representante PP NNyA
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "representante_pp_nnya": "Lic. Pedro Hernández",
+  "tipo_representacion_pp_nnya": "Defensoría de Oficio"
+}
+
+# =====================================================
+# 4. ELIMINAR CJO (Solo Admin)
+# =====================================================
+
+### Eliminar CJO
+DELETE {{baseUrl}}/cjo/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 5. FLUJO COMPLETO - SENTENCIA CONDENATORIA
+# =====================================================
+
+### 1. Crear adolescente y proceso (asume que ya existe proceso_id = 20 con cj_id = 20)
+
+### 2. Crear CJO sin sentencia
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-100",
+  "cj_id": 20,
+  "fuero": "Común",
+  "fecha_ingreso": "2024-03-01",
+  "fecha_auto_apertura": "2024-03-03"
+}
+
+### 3. Actualizar con sentencia condenatoria (crea CEMS)
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sentencia": "Sentencia condenatoria por robo calificado",
+  "fecha_sentencia": "2024-03-20",
+  "monto_reparacion_dano": 7500.00,
+  "fecha_causo_estado": "2024-03-25"
+}
+# Respuesta: cems_creado: true, cems_id: 30
+
+### 4. Verificar CEMS creado
+GET {{baseUrl}}/cems/cjo/1
+Authorization: Bearer {{token}}
+
+### 5. Enviar a ejecución
+PUT {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fecha_sentencia_enviada_ejecucion": "2024-03-28",
+  "juez_envia": "Juez María Sánchez",
+  "juez_recibe": "Juez Ejecución Roberto García"
+}
+
+### 6. Ver CJO completa
+GET {{baseUrl}}/cjo/1
+Authorization: Bearer {{token}}
+
+# =====================================================
+# 6. FLUJO - SENTENCIA ABSOLUTORIA
+# =====================================================
+
+### Crear CJO con sentencia absolutoria (NO crea CEMS)
+POST {{baseUrl}}/cjo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero_cjo": "CJO-2024-200",
+  "cj_id": 25,
+  "fuero": "Común",
+  "fecha_ingreso": "2024-03-01",
+  "sentencia": "Sentencia absolutoria - falta de pruebas",
+  "fecha_sentencia": "2024-03-15"
+}
+# Respuesta: cems_creado: false, cems_id: null
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear CJO con sentencia condenatoria (201)
+{
+"success": true,
+"data": {
+"cjo": {
+"id_cjo": 1,
+"numero_cjo": "CJO-2024-001",
+"cj_id": 1,
+"numero_cj": "CJ-2024-001",
+"fuero": "Común",
+"sentencia": "Sentencia condenatoria",
+"fecha_sentencia": "2024-03-15",
+"monto_reparacion_dano": 5000.00
+},
+"cems_creado": true,
+"cems_id": 10
+},
+"message": "CJO creada exitosamente. CEMS creado automáticamente (sentencia condenatoria o mixta)"
+}
+
+# Crear CJO con sentencia absolutoria (201)
+{
+"success": true,
+"data": {
+"cjo": {
+"id_cjo": 2,
+"numero_cjo": "CJO-2024-002",
+"sentencia": "Sentencia absolutoria"
+},
+"cems_creado": false,
+"cems_id": null
+},
+"message": "CJO creada exitosamente"
+}
+
+# Estadísticas (200)
+{
+"success": true,
+"data": {
+"total": 100,
+"condenatorias": 60,
+"mixtas": 10,
+"absolutorias": 20,
+"sin_sentencia": 10,
+"generan_cems": 70,
+"promedio_reparacion": 6500.50
+}
+}
+
+# Error: Ya existe CJO para esta CJ (409)
+{
+"success": false,
+"error": {
+"message": "Ya existe una CJO para esta CJ"
+}
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear CJO con sentencia condenatoria
+curl -X POST "http://localhost:3000/api/cjo" ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"numero_cjo\":\"CJO-2024-001\",\"cj_id\":1,\"sentencia\":\"Sentencia condenatoria\"}"
+
+# Actualizar CJO
+curl -X PUT "http://localhost:3000/api/cjo/1" ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"monto_reparacion_dano\":10000}"
+
+# Ver CJO
+curl -X GET "http://localhost:3000/api/cjo/1" ^
+-H "Authorization: Bearer TOKEN"

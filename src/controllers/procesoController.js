@@ -37,20 +37,20 @@ const create = async (req, res) => {
 
         // 2. Crear la CJ
         const cjSql = `
-      INSERT INTO cj (
-        numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
-        tipo_narcotico_asegurado, peso_narcotico_gramos,
-        control, lesiones, fecha_control, fecha_formulacion,
-        vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
-        suspension_condicional_proceso_prueba, plazo_suspension,
-        fecha_suspension, fecha_terminacion_suspension,
-        audiencia_intermedia, fecha_audiencia_intermedia,
-        estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
-        medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
-        corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
-        observaciones, observaciones_adicionales, domicilio_hechos_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+            INSERT INTO cj (
+                numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
+                tipo_narcotico_asegurado, peso_narcotico_gramos,
+                control, lesiones, fecha_control, fecha_formulacion,
+                vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
+                suspension_condicional_proceso_prueba, plazo_suspension,
+                fecha_suspension, fecha_terminacion_suspension,
+                audiencia_intermedia, fecha_audiencia_intermedia,
+                estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
+                medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
+                corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
+                observaciones, observaciones_adicionales, domicilio_hechos_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
         const [cjResult] = await connection.execute(cjSql, [
             cj.numero_cj,
