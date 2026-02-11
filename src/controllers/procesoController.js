@@ -19,11 +19,20 @@ const { SUCCESS_MESSAGES } = require('../config/constants');
  * Ambos se crean en una sola transacción
  */
 const create = async (req, res) => {
-    const { adolescente_id, status_id, observaciones, cj } = req.body;
+    const { adolescente_id, status_id, observaciones } = req.body;
 
     // Validar campos requeridos
-    validateRequiredFields(req.body, ['adolescente_id', 'cj']);
-    validateRequiredFields(cj, ['numero_cj']);
+    validateRequiredFields(req.body, ['adolescente_id']);
+
+    // Permitir enviar datos de CJ de dos formas:
+    // 1. Como objeto: { cj: { numero_cj, ... } }
+    // 2. Directamente: { numero_cj, fecha_ingreso, ... }
+    const cjData = req.body.cj || req.body;
+
+    // Validar que tenga numero_cj
+    if (!cjData.numero_cj) {
+        throw new BadRequestError('El campo numero_cj es obligatorio');
+    }
 
     // Crear proceso + CJ + proceso_carpeta en una transacción
     const result = await executeTransaction(async (connection) => {
@@ -37,55 +46,55 @@ const create = async (req, res) => {
 
         // 2. Crear la CJ
         const cjSql = `
-            INSERT INTO cj (
-                numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
-                tipo_narcotico_asegurado, peso_narcotico_gramos,
-                control, lesiones, fecha_control, fecha_formulacion,
-                vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
-                suspension_condicional_proceso_prueba, plazo_suspension,
-                fecha_suspension, fecha_terminacion_suspension,
-                audiencia_intermedia, fecha_audiencia_intermedia,
-                estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
-                medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
-                corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
-                observaciones, observaciones_adicionales, domicilio_hechos_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+      INSERT INTO cj (
+        numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
+        tipo_narcotico_asegurado, peso_narcotico_gramos,
+        control, lesiones, fecha_control, fecha_formulacion,
+        vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
+        suspension_condicional_proceso_prueba, plazo_suspension,
+        fecha_suspension, fecha_terminacion_suspension,
+        audiencia_intermedia, fecha_audiencia_intermedia,
+        estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
+        medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
+        corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
+        observaciones, observaciones_adicionales, domicilio_hechos_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
         const [cjResult] = await connection.execute(cjSql, [
-            cj.numero_cj,
-            cj.fecha_ingreso || null,
-            cj.tipo_fuero || null,
-            cj.numero_ampea || null,
-            cj.tipo_narcotico_asegurado || null,
-            cj.peso_narcotico_gramos || null,
-            cj.control || false,
-            cj.lesiones || false,
-            cj.fecha_control || null,
-            cj.fecha_formulacion || null,
-            cj.vinculacion || false,
-            cj.fecha_vinculacion || null,
-            cj.conducta_vinculacion || null,
-            cj.declaro || null,
-            cj.suspension_condicional_proceso_prueba || false,
-            cj.plazo_suspension || null,
-            cj.fecha_suspension || null,
-            cj.fecha_terminacion_suspension || null,
-            cj.audiencia_intermedia || false,
-            cj.fecha_audiencia_intermedia || null,
-            cj.estatus_carpeta_preliminar || null,
-            cj.reincidente || false,
-            cj.sustraido || false,
-            cj.fecha_sustraccion || null,
-            cj.medidas_proteccion || null,
-            cj.numero_toca_apelacion || null,
-            cj.numero_total_audiencias || 0,
-            cj.corporacion_ejecutora || null,
-            cj.representante_pp_nnya || null,
-            cj.tipo_representacion_pp_nnya || null,
-            cj.observaciones || null,
-            cj.observaciones_adicionales || null,
-            cj.domicilio_hechos_id || null
+            cjData.numero_cj,
+            cjData.fecha_ingreso || null,
+            cjData.tipo_fuero || null,
+            cjData.numero_ampea || null,
+            cjData.tipo_narcotico_asegurado || null,
+            cjData.peso_narcotico_gramos || null,
+            cjData.control || false,
+            cjData.lesiones || false,
+            cjData.fecha_control || null,
+            cjData.fecha_formulacion || null,
+            cjData.vinculacion || false,
+            cjData.fecha_vinculacion || null,
+            cjData.conducta_vinculacion || null,
+            cjData.declaro || null,
+            cjData.suspension_condicional_proceso_prueba || false,
+            cjData.plazo_suspension || null,
+            cjData.fecha_suspension || null,
+            cjData.fecha_terminacion_suspension || null,
+            cjData.audiencia_intermedia || false,
+            cjData.fecha_audiencia_intermedia || null,
+            cjData.estatus_carpeta_preliminar || null,
+            cjData.reincidente || false,
+            cjData.sustraido || false,
+            cjData.fecha_sustraccion || null,
+            cjData.medidas_proteccion || null,
+            cjData.numero_toca_apelacion || null,
+            cjData.numero_total_audiencias || 0,
+            cjData.corporacion_ejecutora || null,
+            cjData.representante_pp_nnya || null,
+            cjData.tipo_representacion_pp_nnya || null,
+            cjData.observaciones || null,
+            cjData.observaciones_adicionales || null,
+            cjData.domicilio_hechos_id || null
         ]);
 
         const cjId = cjResult.insertId;

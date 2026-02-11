@@ -8,13 +8,20 @@ const { NotFoundError, ConflictError, BadRequestError } = require('../utils/erro
  *
  * Gestiona las conductas/delitos del adolescente en una CJ
  * Una CJ puede tener MÚLTIPLES conductas
+ * Ahora incluye calificativas del delito
  */
 
 /**
  * CREAR CONDUCTA DEL ADOLESCENTE
  */
 const create = async (conductaData) => {
-    const { cj_id, conducta_id, texto_conducta, fecha_conducta } = conductaData;
+    const {
+        cj_id,
+        conducta_id,
+        calificativa_id,
+        especificacion_adicional,
+        fecha_conducta
+    } = conductaData;
 
     // Verificar que la CJ existe
     const cjCheck = `SELECT id_cj FROM cj WHERE id_cj = ?`;
@@ -34,15 +41,43 @@ const create = async (conductaData) => {
         }
     }
 
+    // Verificar que la calificativa existe
+    if (calificativa_id) {
+        const calificativaCheck = `
+            SELECT id_calificativa, nombre 
+            FROM calificativa_delito 
+            WHERE id_calificativa = ?
+        `;
+        const [calificativa] = await executeQuery(calificativaCheck, [calificativa_id]);
+
+        if (!calificativa) {
+            throw new NotFoundError('La calificativa del catálogo no existe');
+        }
+
+        // Si calificativa es "Otro" (id: 8), validar que haya especificacion_adicional
+        if (calificativa.nombre.toLowerCase() === 'otro' && !especificacion_adicional) {
+            throw new BadRequestError(
+                'Cuando la calificativa es "Otro", debe proporcionar especificacion_adicional'
+            );
+        }
+    }
+
     const sql = `
-    INSERT INTO cj_conducta (cj_id, conducta_id, texto_conducta, fecha_conducta)
-    VALUES (?, ?, ?, ?)
-  `;
+        INSERT INTO cj_conducta (
+            cj_id,
+            conducta_id,
+            calificativa_id,
+            especificacion_adicional,
+            fecha_conducta
+        )
+        VALUES (?, ?, ?, ?, ?)
+    `;
 
     const result = await executeQuery(sql, [
         cj_id,
         conducta_id || null,
-        texto_conducta || null,
+        calificativa_id || null,
+        especificacion_adicional || null,
         fecha_conducta || null
     ]);
 
@@ -54,17 +89,18 @@ const create = async (conductaData) => {
  */
 const getByCjId = async (cjId) => {
     const sql = `
-    SELECT 
-      cc.*,
-      c.nombre as conducta_nombre,
-      c.tipo_conducta,
-      c.fuero_default as conducta_fuero_default,
-      c.descripcion as conducta_descripcion
-    FROM cj_conducta cc
-    LEFT JOIN conducta c ON cc.conducta_id = c.id_conducta
-    WHERE cc.cj_id = ?
-    ORDER BY cc.fecha_conducta DESC, cc.id_conducta DESC
-  `;
+        SELECT
+            cc.*,
+            c.nombre as conducta_nombre,
+            c.fuero_default as conducta_fuero_default,
+            c.descripcion as conducta_descripcion,
+            cal.nombre as calificativa_nombre
+        FROM cj_conducta cc
+                 LEFT JOIN conducta c ON cc.conducta_id = c.id_conducta
+                 LEFT JOIN calificativa_delito cal ON cc.calificativa_id = cal.id_calificativa
+        WHERE cc.cj_id = ?
+        ORDER BY cc.fecha_conducta DESC, cc.id_conducta DESC
+    `;
 
     const conductas = await executeQuery(sql, [cjId]);
 
@@ -74,7 +110,8 @@ const getByCjId = async (cjId) => {
             id_conducta: conducta.id_conducta,
             cj_id: conducta.cj_id,
             conducta_id: conducta.conducta_id,
-            texto_conducta: conducta.texto_conducta,
+            calificativa_id: conducta.calificativa_id,
+            especificacion_adicional: conducta.especificacion_adicional,
             fecha_conducta: conducta.fecha_conducta
         };
 
@@ -83,9 +120,16 @@ const getByCjId = async (cjId) => {
             result.conducta = {
                 id: conducta.conducta_id,
                 nombre: conducta.conducta_nombre,
-                tipo: conducta.tipo_conducta,
                 fuero_default: conducta.conducta_fuero_default,
                 descripcion: conducta.conducta_descripcion
+            };
+        }
+
+        // Si tiene calificativa, agregarla
+        if (conducta.calificativa_id) {
+            result.calificativa = {
+                id: conducta.calificativa_id,
+                nombre: conducta.calificativa_nombre
             };
         }
 
@@ -98,16 +142,17 @@ const getByCjId = async (cjId) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      cc.*,
-      c.nombre as conducta_nombre,
-      c.tipo_conducta,
-      c.fuero_default as conducta_fuero_default,
-      c.descripcion as conducta_descripcion
-    FROM cj_conducta cc
-    LEFT JOIN conducta c ON cc.conducta_id = c.id_conducta
-    WHERE cc.id_conducta = ?
-  `;
+        SELECT
+            cc.*,
+            c.nombre as conducta_nombre,
+            c.fuero_default as conducta_fuero_default,
+            c.descripcion as conducta_descripcion,
+            cal.nombre as calificativa_nombre
+        FROM cj_conducta cc
+                 LEFT JOIN conducta c ON cc.conducta_id = c.id_conducta
+                 LEFT JOIN calificativa_delito cal ON cc.calificativa_id = cal.id_calificativa
+        WHERE cc.id_conducta = ?
+    `;
 
     const [conducta] = await executeQuery(sql, [id]);
 
@@ -119,7 +164,8 @@ const getById = async (id) => {
         id_conducta: conducta.id_conducta,
         cj_id: conducta.cj_id,
         conducta_id: conducta.conducta_id,
-        texto_conducta: conducta.texto_conducta,
+        calificativa_id: conducta.calificativa_id,
+        especificacion_adicional: conducta.especificacion_adicional,
         fecha_conducta: conducta.fecha_conducta
     };
 
@@ -127,9 +173,15 @@ const getById = async (id) => {
         result.conducta = {
             id: conducta.conducta_id,
             nombre: conducta.conducta_nombre,
-            tipo: conducta.tipo_conducta,
             fuero_default: conducta.conducta_fuero_default,
             descripcion: conducta.conducta_descripcion
+        };
+    }
+
+    if (conducta.calificativa_id) {
+        result.calificativa = {
+            id: conducta.calificativa_id,
+            nombre: conducta.calificativa_nombre
         };
     }
 
@@ -159,9 +211,34 @@ const update = async (id, conductaData) => {
         values.push(conductaData.conducta_id);
     }
 
-    if (conductaData.texto_conducta !== undefined) {
-        updates.push('texto_conducta = ?');
-        values.push(conductaData.texto_conducta);
+    if (conductaData.calificativa_id !== undefined) {
+        // Verificar que la calificativa existe
+        if (conductaData.calificativa_id) {
+            const calificativaCheck = `
+                SELECT id_calificativa, nombre 
+                FROM calificativa_delito 
+                WHERE id_calificativa = ?
+            `;
+            const [calificativa] = await executeQuery(calificativaCheck, [conductaData.calificativa_id]);
+
+            if (!calificativa) {
+                throw new NotFoundError('La calificativa del catálogo no existe');
+            }
+
+            // Si es "Otro", validar especificacion_adicional
+            if (calificativa.nombre.toLowerCase() === 'otro' && !conductaData.especificacion_adicional) {
+                throw new BadRequestError(
+                    'Cuando la calificativa es "Otro", debe proporcionar especificacion_adicional'
+                );
+            }
+        }
+        updates.push('calificativa_id = ?');
+        values.push(conductaData.calificativa_id);
+    }
+
+    if (conductaData.especificacion_adicional !== undefined) {
+        updates.push('especificacion_adicional = ?');
+        values.push(conductaData.especificacion_adicional);
     }
 
     if (conductaData.fecha_conducta !== undefined) {
@@ -176,10 +253,10 @@ const update = async (id, conductaData) => {
     values.push(id);
 
     const sql = `
-    UPDATE cj_conducta 
-    SET ${updates.join(', ')}
-    WHERE id_conducta = ?
-  `;
+        UPDATE cj_conducta
+        SET ${updates.join(', ')}
+        WHERE id_conducta = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);
@@ -207,19 +284,19 @@ const countByCjId = async (cjId) => {
 };
 
 /**
- * OBTENER ESTADÍSTICAS DE CONDUCTAS
+ * OBTENER ESTADÍSTICAS DE CONDUCTAS POR CALIFICATIVA
  */
 const getStats = async () => {
     const sql = `
-    SELECT 
-      c.tipo_conducta,
-      COUNT(*) as total
-    FROM cj_conducta cc
-    INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
-    WHERE cc.conducta_id IS NOT NULL
-    GROUP BY c.tipo_conducta
-    ORDER BY total DESC
-  `;
+        SELECT
+            cal.nombre as calificativa,
+            COUNT(*) as total
+        FROM cj_conducta cc
+                 INNER JOIN calificativa_delito cal ON cc.calificativa_id = cal.id_calificativa
+        WHERE cc.calificativa_id IS NOT NULL
+        GROUP BY cal.id_calificativa, cal.nombre
+        ORDER BY total DESC
+    `;
 
     return await executeQuery(sql);
 };
@@ -229,19 +306,38 @@ const getStats = async () => {
  */
 const getMasFrecuentes = async (limit = 10) => {
     const sql = `
-    SELECT 
-      c.id_conducta,
-      c.nombre,
-      c.tipo_conducta,
-      COUNT(cc.id_conducta) as total_casos
-    FROM cj_conducta cc
-    INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
-    GROUP BY c.id_conducta, c.nombre, c.tipo_conducta
-    ORDER BY total_casos DESC
-    LIMIT ?
-  `;
+        SELECT
+            c.id_conducta,
+            c.nombre,
+            COUNT(cc.id_conducta) as total_casos
+        FROM cj_conducta cc
+                 INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
+        GROUP BY c.id_conducta, c.nombre
+        ORDER BY total_casos DESC
+            LIMIT ?
+    `;
 
     return await executeQuery(sql, [limit]);
+};
+
+/**
+ * OBTENER ESTADÍSTICAS POR DELITO Y CALIFICATIVA
+ */
+const getStatsByDelitoCalificativa = async () => {
+    const sql = `
+        SELECT 
+            c.nombre as delito,
+            cal.nombre as calificativa,
+            COUNT(*) as total
+        FROM cj_conducta cc
+        INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
+        INNER JOIN calificativa_delito cal ON cc.calificativa_id = cal.id_calificativa
+        GROUP BY c.id_conducta, c.nombre, cal.id_calificativa, cal.nombre
+        ORDER BY total DESC
+        LIMIT 20
+    `;
+
+    return await executeQuery(sql);
 };
 
 module.exports = {
@@ -252,5 +348,6 @@ module.exports = {
     remove,
     countByCjId,
     getStats,
-    getMasFrecuentes
+    getMasFrecuentes,
+    getStatsByDelitoCalificativa
 };

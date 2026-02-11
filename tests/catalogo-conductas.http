@@ -1,0 +1,216 @@
+# =====================================================
+# PRUEBAS DE API - CATÁLOGO DE CONDUCTAS (Delitos)
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# CREAR CONDUCTA
+# =====================================================
+
+### Crear conducta de fuero común
+POST {{baseUrl}}/catalogo-conductas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Homicidio",
+  "descripcion": "Privación de la vida de una persona",
+  "fuero_default": "Común",
+  "activo": true
+}
+
+### Crear conducta de fuero federal
+POST {{baseUrl}}/catalogo-conductas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Delitos contra la salud",
+  "descripcion": "Narcomenudeo y tráfico de drogas",
+  "fuero_default": "Federal",
+  "activo": true
+}
+
+### Crear conducta mínima (solo nombre requerido)
+POST {{baseUrl}}/catalogo-conductas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Robo"
+}
+
+# =====================================================
+# CONSULTAR CONDUCTAS
+# =====================================================
+
+### Obtener todas las conductas
+GET {{baseUrl}}/catalogo-conductas
+Authorization: Bearer {{token}}
+
+### Obtener solo conductas activas
+GET {{baseUrl}}/catalogo-conductas/activas
+Authorization: Bearer {{token}}
+
+### Filtrar por fuero común
+GET {{baseUrl}}/catalogo-conductas?fuero_default=Común
+Authorization: Bearer {{token}}
+
+### Filtrar por fuero federal
+GET {{baseUrl}}/catalogo-conductas?fuero_default=Federal
+Authorization: Bearer {{token}}
+
+### Buscar por nombre
+GET {{baseUrl}}/catalogo-conductas?search=homicidio
+Authorization: Bearer {{token}}
+
+### Filtrar solo inactivas
+GET {{baseUrl}}/catalogo-conductas?activo=false
+Authorization: Bearer {{token}}
+
+### Obtener conducta por ID
+GET {{baseUrl}}/catalogo-conductas/1
+Authorization: Bearer {{token}}
+
+### Obtener por fuero (endpoint específico)
+GET {{baseUrl}}/catalogo-conductas/fuero/Común
+Authorization: Bearer {{token}}
+
+GET {{baseUrl}}/catalogo-conductas/fuero/Federal
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ACTUALIZAR CONDUCTA
+# =====================================================
+
+### Actualizar conducta
+PUT {{baseUrl}}/catalogo-conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "descripcion": "Descripción actualizada del delito",
+  "fuero_default": "Federal"
+}
+
+### Cambiar solo el nombre
+PUT {{baseUrl}}/catalogo-conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Homicidio doloso"
+}
+
+# =====================================================
+# ACTIVAR/DESACTIVAR
+# =====================================================
+
+### Toggle activo (activar/desactivar)
+PUT {{baseUrl}}/catalogo-conductas/1/toggle
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ELIMINAR CONDUCTA
+# =====================================================
+
+### Eliminar conducta (solo si no está en uso)
+DELETE {{baseUrl}}/catalogo-conductas/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ESTADÍSTICAS
+# =====================================================
+
+### Estadísticas de uso de conductas
+GET {{baseUrl}}/catalogo-conductas/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear conducta (201)
+{
+  "success": true,
+  "data": {
+    "id_conducta": 1,
+    "nombre": "Homicidio",
+    "descripcion": "Privación de la vida de una persona",
+    "fuero_default": "Común",
+    "activo": true
+  },
+  "message": "Conducta creada exitosamente"
+}
+
+# Listar conductas activas (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_conducta": 1,
+      "nombre": "Homicidio",
+      "descripcion": "...",
+      "fuero_default": "Común",
+      "activo": true
+    }
+  ],
+  "message": "Conductas activas obtenidas exitosamente"
+}
+
+# Estadísticas de uso (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id_conducta": 1,
+      "nombre": "Homicidio",
+      "fuero_default": "Común",
+      "activo": true,
+      "total_casos": 25
+    },
+    {
+      "id_conducta": 2,
+      "nombre": "Robo",
+      "fuero_default": "Común",
+      "activo": true,
+      "total_casos": 18
+    }
+  ]
+}
+
+# Error: Nombre duplicado (409)
+{
+  "success": false,
+  "error": {
+    "message": "La conducta \"Homicidio\" ya existe"
+  }
+}
+
+# Error: En uso, no se puede eliminar (409)
+{
+  "success": false,
+  "error": {
+    "message": "No se puede eliminar la conducta porque está en uso en 15 caso(s). Puede desactivarla en su lugar."
+  }
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear conducta
+curl -X POST "http://localhost:3000/api/catalogo-conductas" ^
+  -H "Authorization: Bearer TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nombre\":\"Homicidio\",\"fuero_default\":\"Común\"}"
+
+# Obtener conductas activas
+curl -X GET "http://localhost:3000/api/catalogo-conductas/activas" ^
+  -H "Authorization: Bearer TOKEN"
+
+# Filtrar por fuero
+curl -X GET "http://localhost:3000/api/catalogo-conductas?fuero_default=Común" ^
+  -H "Authorization: Bearer TOKEN"

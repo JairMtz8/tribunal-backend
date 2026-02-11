@@ -1,0 +1,288 @@
+# =====================================================
+# PRUEBAS DE API - CATÁLOGO DE CALIFICATIVAS DE DELITO
+# =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+
+# =====================================================
+# CREAR CALIFICATIVA
+# =====================================================
+
+### Crear calificativa activa
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Simple",
+  "activo": true
+}
+
+### Crear calificativa (activo por defecto)
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Calificado"
+}
+
+### Crear calificativa "Otro"
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Otro",
+  "activo": true
+}
+
+# =====================================================
+# CONSULTAR CALIFICATIVAS
+# =====================================================
+
+### Obtener todas las calificativas
+GET {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+
+### Obtener solo calificativas activas
+GET {{baseUrl}}/catalogo-calificativas/activas
+Authorization: Bearer {{token}}
+
+### Buscar calificativa
+GET {{baseUrl}}/catalogo-calificativas?search=cali
+Authorization: Bearer {{token}}
+
+### Filtrar solo inactivas
+GET {{baseUrl}}/catalogo-calificativas?activo=false
+Authorization: Bearer {{token}}
+
+### Obtener calificativa por ID
+GET {{baseUrl}}/catalogo-calificativas/1
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ACTUALIZAR CALIFICATIVA
+# =====================================================
+
+### Actualizar nombre
+PUT {{baseUrl}}/catalogo-calificativas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Simple (sin agravantes)"
+}
+
+### Desactivar manualmente
+PUT {{baseUrl}}/catalogo-calificativas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+# =====================================================
+# ACTIVAR/DESACTIVAR
+# =====================================================
+
+### Toggle activo (activar/desactivar)
+PUT {{baseUrl}}/catalogo-calificativas/1/toggle
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ELIMINAR CALIFICATIVA
+# =====================================================
+
+### Eliminar calificativa (solo si no está en uso)
+DELETE {{baseUrl}}/catalogo-calificativas/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ESTADÍSTICAS
+# =====================================================
+
+### Estadísticas de uso de calificativas
+GET {{baseUrl}}/catalogo-calificativas/stats
+Authorization: Bearer {{token}}
+
+# =====================================================
+# DATOS INICIALES (Poblar catálogo)
+# =====================================================
+
+### 1. Simple
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Simple"
+}
+
+### 2. Calificado
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Calificado"
+}
+
+### 3. Calificado Agravado
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Calificado Agravado"
+}
+
+### 4. Agravado
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Agravado"
+}
+
+### 5. Equiparado
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Equiparado"
+}
+
+### 6. Culposo
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Culposo"
+}
+
+### 7. Doloso
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Doloso"
+}
+
+### 8. Otro
+POST {{baseUrl}}/catalogo-calificativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Otro"
+}
+
+# =====================================================
+# RESPUESTAS ESPERADAS
+# =====================================================
+
+# Crear calificativa (201)
+{
+"success": true,
+"data": {
+"id_calificativa": 1,
+"nombre": "Simple",
+"activo": true
+},
+"message": "Calificativa creada exitosamente"
+}
+
+# Listar calificativas activas (200)
+{
+"success": true,
+"data": [
+{
+"id_calificativa": 1,
+"nombre": "Simple",
+"activo": true
+},
+{
+"id_calificativa": 2,
+"nombre": "Calificado",
+"activo": true
+}
+],
+"message": "Calificativas activas obtenidas exitosamente"
+}
+
+# Estadísticas de uso (200)
+{
+"success": true,
+"data": [
+{
+"id_calificativa": 2,
+"nombre": "Calificado",
+"activo": true,
+"total_usos": 25
+},
+{
+"id_calificativa": 1,
+"nombre": "Simple",
+"activo": true,
+"total_usos": 18
+},
+{
+"id_calificativa": 8,
+"nombre": "Otro",
+"activo": true,
+"total_usos": 5
+}
+]
+}
+
+# Toggle activo (200)
+{
+"success": true,
+"data": {
+"id_calificativa": 1,
+"nombre": "Simple",
+"activo": false
+},
+"message": "Calificativa desactivada exitosamente"
+}
+
+# Error: Nombre duplicado (409)
+{
+"success": false,
+"error": {
+"message": "La calificativa \"Simple\" ya existe"
+}
+}
+
+# Error: En uso, no se puede eliminar (409)
+{
+"success": false,
+"error": {
+"message": "No se puede eliminar la calificativa porque está en uso en 25 conducta(s). Puede desactivarla en su lugar."
+}
+}
+
+# =====================================================
+# EQUIVALENTES EN CURL (Windows CMD)
+# =====================================================
+
+# Crear calificativa
+curl -X POST "http://localhost:3000/api/catalogo-calificativas" ^
+-H "Authorization: Bearer TOKEN" ^
+-H "Content-Type: application/json" ^
+-d "{\"nombre\":\"Simple\"}"
+
+# Obtener calificativas activas
+curl -X GET "http://localhost:3000/api/catalogo-calificativas/activas" ^
+-H "Authorization: Bearer TOKEN"
+
+# Toggle activo/inactivo
+curl -X PUT "http://localhost:3000/api/catalogo-calificativas/1/toggle" ^
+-H "Authorization: Bearer TOKEN"

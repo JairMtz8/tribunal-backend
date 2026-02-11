@@ -142,13 +142,21 @@ app.use('/api/libertad', libertadRoutes);
 const cjConductaRoutes = require('./routes/cjConductaRoutes');
 app.use('/api/cj-conductas', cjConductaRoutes);
 
+// Catálogo de Conductas (Delitos)
+const catalogoConductaRoutes = require('./routes/catalogoConductaRoutes');
+app.use('/api/catalogo-conductas', catalogoConductaRoutes);
+
+// Catálogo de Calificativas de Delito
+const calificativaDelitoRoutes = require('./routes/calificativaDelitoRoutes');
+app.use('/api/catalogo-calificativas', calificativaDelitoRoutes);
+
 // Víctimas
 const victimaRoutes = require('./routes/victimaRoutes');
-app.use('/api', victimaRoutes);
+app.use('/api/victimas', victimaRoutes);
 
 // Actores Jurídicos
 const actorJuridicoRoutes = require('./routes/actorJuridicoRoutes');
-app.use('/api', actorJuridicoRoutes);
+app.use('/api/actores', actorJuridicoRoutes);
 
 // Medidas Cautelares
 const medidaCautelarRoutes = require('./routes/medidaCautelarRoutes');

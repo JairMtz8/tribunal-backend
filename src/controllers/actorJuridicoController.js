@@ -232,22 +232,81 @@ const getActoresAgrupados = async (req, res) => {
  */
 const asignarMultiples = async (req, res) => {
     const { id } = req.params; // proceso_id
-    const { tipo_carpeta, actores_ids } = req.body;
 
-    validateRequiredFields(req.body, ['tipo_carpeta', 'actores_ids']);
+    // Soportar 2 formatos:
+    // Formato 1: { tipo_carpeta: "CJ", actores_ids: [1, 2] }
+    // Formato 2: { actores: [{ actor_id: 1, tipo_carpeta: "CJ" }, ...] }
 
-    if (!Array.isArray(actores_ids) || actores_ids.length === 0) {
-        const { BadRequestError } = require('../utils/errorHandler');
-        throw new BadRequestError('actores_ids debe ser un array con al menos un ID');
+    if (req.body.actores && Array.isArray(req.body.actores)) {
+        // Formato 2: Actores con carpetas individuales
+        const { actores } = req.body;
+
+        if (actores.length === 0) {
+            const { BadRequestError } = require('../utils/errorHandler');
+            throw new BadRequestError('El array de actores no puede estar vacío');
+        }
+
+        // Validar cada actor
+        const tiposValidos = ['CJ', 'CJO', 'CEMCI', 'CEMS'];
+        for (const actor of actores) {
+            if (!actor.actor_id || !actor.tipo_carpeta) {
+                const { BadRequestError } = require('../utils/errorHandler');
+                throw new BadRequestError('Cada actor debe tener actor_id y tipo_carpeta');
+            }
+            if (!tiposValidos.includes(actor.tipo_carpeta)) {
+                const { BadRequestError } = require('../utils/errorHandler');
+                throw new BadRequestError(
+                    `Tipo de carpeta inválido: ${actor.tipo_carpeta}. Debe ser uno de: ${tiposValidos.join(', ')}`
+                );
+            }
+        }
+
+        // Asignar cada actor individualmente
+        const resultados = [];
+        for (const actor of actores) {
+            try {
+                const resultado = await procesoActorModel.asignar(id, actor.tipo_carpeta, actor.actor_id);
+                resultados.push({
+                    actor_id: actor.actor_id,
+                    tipo_carpeta: actor.tipo_carpeta,
+                    exito: true,
+                    data: resultado
+                });
+            } catch (error) {
+                resultados.push({
+                    actor_id: actor.actor_id,
+                    tipo_carpeta: actor.tipo_carpeta,
+                    exito: false,
+                    error: error.message
+                });
+            }
+        }
+
+        return successResponse(
+            res,
+            resultados,
+            'Proceso de asignación completado'
+        );
+
+    } else {
+        // Formato 1: Todos a la misma carpeta
+        const { tipo_carpeta, actores_ids } = req.body;
+
+        validateRequiredFields(req.body, ['tipo_carpeta', 'actores_ids']);
+
+        if (!Array.isArray(actores_ids) || actores_ids.length === 0) {
+            const { BadRequestError } = require('../utils/errorHandler');
+            throw new BadRequestError('actores_ids debe ser un array con al menos un ID');
+        }
+
+        const resultados = await procesoActorModel.asignarMultiples(id, tipo_carpeta, actores_ids);
+
+        return successResponse(
+            res,
+            resultados,
+            'Proceso de asignación completado'
+        );
     }
-
-    const resultados = await procesoActorModel.asignarMultiples(id, tipo_carpeta, actores_ids);
-
-    return successResponse(
-        res,
-        resultados,
-        'Proceso de asignación completado'
-    );
 };
 
 module.exports = {

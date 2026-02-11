@@ -1,87 +1,107 @@
 # =====================================================
-# PRUEBAS DE API - CJ_CONDUCTA (Conductas del Adolescente)
+# PRUEBAS DE API - CJ CONDUCTAS (Conductas del Adolescente)
+# CON SOPORTE DE CALIFICATIVAS
 # =====================================================
 
 @baseUrl = http://localhost:3000/api
 @token = TU_TOKEN_AQUI
 
 # =====================================================
-# 1. CREAR CONDUCTAS DEL ADOLESCENTE
+# CREAR CONDUCTA DEL ADOLESCENTE
 # =====================================================
 
-### Crear conducta usando catálogo
+### Crear conducta CON calificativa del catálogo
 POST {{baseUrl}}/cj-conductas
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "cj_id": 1,
-  "conducta_id": 2,
-  "texto_conducta": "Con violencia en pandilla, uso de arma blanca",
-  "fecha_conducta": "2024-02-15"
+  "conducta_id": 1,
+  "calificativa_id": 2,
+  "especificacion_adicional": null,
+  "fecha_conducta": "2025-01-11"
 }
 
-### Crear conducta solo con catálogo (sin detalles)
+### Crear conducta con calificativa "Otro" (requiere especificacion_adicional)
 POST {{baseUrl}}/cj-conductas
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "cj_id": 1,
-  "conducta_id": 8,
-  "fecha_conducta": "2024-02-15"
+  "conducta_id": 5,
+  "calificativa_id": 8,
+  "especificacion_adicional": "Con violencia extrema en casa habitación durante la noche",
+  "fecha_conducta": "2025-01-11"
 }
 
-### Crear conducta solo con texto (sin catálogo)
+### Crear conducta solo con especificacion_adicional (sin catálogos)
 POST {{baseUrl}}/cj-conductas
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "cj_id": 1,
-  "texto_conducta": "Conducta específica no catalogada",
-  "fecha_conducta": "2024-02-15"
-}
-
-### Múltiples conductas para la misma CJ
-POST {{baseUrl}}/cj-conductas
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "cj_id": 1,
-  "conducta_id": 2,
-  "texto_conducta": "Robo calificado"
-}
-
-###
-POST {{baseUrl}}/cj-conductas
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "cj_id": 1,
-  "conducta_id": 8,
-  "texto_conducta": "Lesiones durante el robo"
+  "conducta_id": null,
+  "calificativa_id": null,
+  "especificacion_adicional": "Delitos contra la salud en su modalidad de narcomenudeo por la posesión del psicotrópico denominado metanfetamina con fines de comercio",
+  "fecha_conducta": "2025-01-11"
 }
 
 # =====================================================
-# 2. CONSULTAR CONDUCTAS
+# CONSULTAR CONDUCTAS
 # =====================================================
 
-### Obtener todas las conductas de una CJ
+### Obtener conductas de una CJ
 GET {{baseUrl}}/cj-conductas/cj/1
 Authorization: Bearer {{token}}
 
-### Obtener conducta específica por ID
+### Obtener conducta por ID
 GET {{baseUrl}}/cj-conductas/1
 Authorization: Bearer {{token}}
 
-### Estadísticas de conductas
+# =====================================================
+# ACTUALIZAR CONDUCTA
+# =====================================================
+
+### Actualizar conducta - cambiar calificativa
+PUT {{baseUrl}}/cj-conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "calificativa_id": 3,
+  "especificacion_adicional": "Actualizado con nuevos detalles"
+}
+
+### Actualizar conducta - cambiar a "Otro"
+PUT {{baseUrl}}/cj-conductas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "calificativa_id": 8,
+  "especificacion_adicional": "Detalles específicos del caso"
+}
+
+# =====================================================
+# ELIMINAR CONDUCTA
+# =====================================================
+
+### Eliminar conducta
+DELETE {{baseUrl}}/cj-conductas/10
+Authorization: Bearer {{token}}
+
+# =====================================================
+# ESTADÍSTICAS
+# =====================================================
+
+### Estadísticas por calificativa
 GET {{baseUrl}}/cj-conductas/stats
 Authorization: Bearer {{token}}
 
-### Conductas más frecuentes (top 10)
+### Conductas más frecuentes
 GET {{baseUrl}}/cj-conductas/mas-frecuentes
 Authorization: Bearer {{token}}
 
@@ -89,278 +109,75 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/cj-conductas/mas-frecuentes?limit=5
 Authorization: Bearer {{token}}
 
-# =====================================================
-# 3. ACTUALIZAR CONDUCTAS
-# =====================================================
-
-### Actualizar conducta del catálogo
-PUT {{baseUrl}}/cj-conductas/1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "conducta_id": 3,
-  "texto_conducta": "Actualizado: Robo en lugar habitado con violencia"
-}
-
-### Actualizar solo detalles
-PUT {{baseUrl}}/cj-conductas/1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "texto_conducta": "Detalles actualizados del caso"
-}
-
-### Actualizar fecha
-PUT {{baseUrl}}/cj-conductas/1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "fecha_conducta": "2024-02-20"
-}
-
-# =====================================================
-# 4. ELIMINAR CONDUCTAS
-# =====================================================
-
-### Eliminar conducta
-DELETE {{baseUrl}}/cj-conductas/1
-Authorization: Bearer {{token}}
-
-# =====================================================
-# 5. FLUJO COMPLETO - CREAR PROCESO CON CONDUCTAS
-# =====================================================
-
-### 1. Crear adolescente
-POST {{baseUrl}}/adolescentes
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "nombre": "Carlos Ramírez",
-  "fecha_nacimiento": "2010-03-15",
-  "sexo": "Hombre"
-}
-# Respuesta: { "id_adolescente": 5 }
-
-### 2. Crear proceso con CJ
-POST {{baseUrl}}/procesos
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "adolescente_id": 5,
-  "cj": {
-    "numero_cj": "CJ-2024-050",
-    "fecha_ingreso": "2024-02-15",
-    "tipo_fuero": "Común"
-  }
-}
-# Respuesta: { "proceso": {...}, "carpetas": { "cj": { "id_cj": 10 } } }
-
-### 3. Agregar primera conducta
-POST {{baseUrl}}/cj-conductas
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "cj_id": 10,
-  "conducta_id": 2,
-  "texto_conducta": "Robo calificado con violencia en pandilla",
-  "fecha_conducta": "2024-02-15"
-}
-
-### 4. Agregar segunda conducta (mismo caso)
-POST {{baseUrl}}/cj-conductas
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "cj_id": 10,
-  "conducta_id": 8,
-  "texto_conducta": "Lesiones a la víctima durante el robo",
-  "fecha_conducta": "2024-02-15"
-}
-
-### 5. Ver todas las conductas de la CJ
-GET {{baseUrl}}/cj-conductas/cj/10
-Authorization: Bearer {{token}}
-
-# =====================================================
-# 6. EJEMPLO CON NARCÓTICOS (FUERO FEDERAL)
-# =====================================================
-
-### Crear CJ con fuero sugerido
-POST {{baseUrl}}/procesos
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "adolescente_id": 6,
-  "cj": {
-    "numero_cj": "CJ-2024-051",
-    "fecha_ingreso": "2024-02-16",
-    "tipo_fuero": "Federal"
-  }
-}
-# Respuesta: { "cj": { "id_cj": 11 } }
-
-### Agregar conducta de narcóticos (Federal)
-POST {{baseUrl}}/cj-conductas
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "cj_id": 11,
-  "conducta_id": 18,
-  "texto_conducta": "Posesión de 50 gramos de cocaína",
-  "fecha_conducta": "2024-02-16"
-}
-
-### Consultar conducta con fuero sugerido
-GET {{baseUrl}}/cj-conductas/cj/11
+### ⭐ NUEVO: Estadísticas por delito y calificativa
+GET {{baseUrl}}/cj-conductas/stats-delito-calificativa
 Authorization: Bearer {{token}}
 
 # =====================================================
 # RESPUESTAS ESPERADAS
 # =====================================================
 
-# Crear conducta (201)
+# Crear conducta con calificativa (201)
 {
   "success": true,
   "data": {
     "id_conducta": 1,
     "cj_id": 1,
-    "conducta_id": 2,
-    "texto_conducta": "Con violencia en pandilla",
-    "fecha_conducta": "2024-02-15",
+    "conducta_id": 1,
+    "calificativa_id": 2,
+    "especificacion_adicional": null,
+    "fecha_conducta": "2025-01-11",
     "conducta": {
-      "id": 2,
-      "nombre": "Robo calificado",
-      "tipo": "Patrimonial",
+      "id": 1,
+      "nombre": "Homicidio",
       "fuero_default": "Común",
-      "descripcion": "Robo con violencia o agravantes"
+      "descripcion": "Privación de la vida"
+    },
+    "calificativa": {
+      "id": 2,
+      "nombre": "Calificado"
     }
+  },
+  "message": "Conducta del adolescente creada exitosamente"
+}
+
+# Error: Calificativa "Otro" sin especificacion_adicional (400)
+{
+  "success": false,
+  "error": {
+    "message": "Cuando la calificativa es \"Otro\", debe proporcionar especificacion_adicional"
   }
 }
 
-# Listar conductas de CJ (200)
+# Estadísticas por delito y calificativa (200)
 {
   "success": true,
   "data": [
     {
-      "id_conducta": 1,
-      "cj_id": 1,
-      "conducta_id": 2,
-      "texto_conducta": "Con violencia",
-      "fecha_conducta": "2024-02-15",
-      "conducta": {
-        "id": 2,
-        "nombre": "Robo calificado",
-        "tipo": "Patrimonial",
-        "fuero_default": "Común"
-      }
+      "delito": "Homicidio",
+      "calificativa": "Calificado",
+      "total": 15
     },
     {
-      "id_conducta": 2,
-      "cj_id": 1,
-      "conducta_id": 8,
-      "texto_conducta": "Lesiones a la víctima",
-      "fecha_conducta": "2024-02-15",
-      "conducta": {
-        "id": 8,
-        "nombre": "Lesiones",
-        "tipo": "Violenta",
-        "fuero_default": "Común"
-      }
+      "delito": "Robo",
+      "calificativa": "Con violencia",
+      "total": 12
     }
   ]
-}
-
-# Estadísticas (200)
-{
-  "success": true,
-  "data": [
-    {
-      "tipo_conducta": "Patrimonial",
-      "total": 45
-    },
-    {
-      "tipo_conducta": "Violenta",
-      "total": 20
-    },
-    {
-      "tipo_conducta": "Contra la salud",
-      "total": 8
-    }
-  ]
-}
-
-# Más frecuentes (200)
-{
-  "success": true,
-  "data": [
-    {
-      "id_conducta": 2,
-      "nombre": "Robo calificado",
-      "tipo_conducta": "Patrimonial",
-      "total_casos": 35
-    },
-    {
-      "id_conducta": 8,
-      "nombre": "Lesiones",
-      "tipo_conducta": "Violenta",
-      "total_casos": 15
-    }
-  ]
-}
-
-# Error: CJ no existe (404)
-{
-  "success": false,
-  "error": {
-    "message": "La CJ especificada no existe"
-  }
-}
-
-# Error: Conducta del catálogo no existe (404)
-{
-  "success": false,
-  "error": {
-    "message": "La conducta del catálogo no existe"
-  }
-}
-
-# Error: Falta conducta_id o texto_conducta (400)
-{
-  "success": false,
-  "error": {
-    "message": "Debe proporcionar conducta_id o texto_conducta"
-  }
 }
 
 # =====================================================
 # EQUIVALENTES EN CURL (Windows CMD)
 # =====================================================
 
-# Crear conducta
+# Crear conducta con calificativa
 curl -X POST "http://localhost:3000/api/cj-conductas" ^
   -H "Authorization: Bearer TOKEN" ^
   -H "Content-Type: application/json" ^
-  -d "{\"cj_id\":1,\"conducta_id\":2,\"texto_conducta\":\"Con violencia\"}"
+  -d "{\"cj_id\":1,\"conducta_id\":1,\"calificativa_id\":2,\"fecha_conducta\":\"2025-01-11\"}"
 
-# Listar conductas de CJ
-curl -X GET "http://localhost:3000/api/cj-conductas/cj/1" ^
-  -H "Authorization: Bearer TOKEN"
-
-# Actualizar conducta
-curl -X PUT "http://localhost:3000/api/cj-conductas/1" ^
+# Crear conducta con "Otro"
+curl -X POST "http://localhost:3000/api/cj-conductas" ^
   -H "Authorization: Bearer TOKEN" ^
   -H "Content-Type: application/json" ^
-  -d "{\"texto_conducta\":\"Actualizado\"}"
-
-# Eliminar conducta
-curl -X DELETE "http://localhost:3000/api/cj-conductas/1" ^
-  -H "Authorization: Bearer TOKEN"
+  -d "{\"cj_id\":1,\"conducta_id\":5,\"calificativa_id\":8,\"especificacion_adicional\":\"Con violencia extrema\",\"fecha_conducta\":\"2025-01-11\"}"

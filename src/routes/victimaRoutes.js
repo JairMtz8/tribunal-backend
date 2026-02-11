@@ -15,8 +15,20 @@ const { validateId, validatePagination } = require('../middlewares/validate');
  * - Consultar: Todos los usuarios autenticados
  * - Crear/Modificar: Admin, Juzgado, Juzgado Ejecución
  * - Eliminar: Solo Admin
- * - Asociar/Desasociar: Admin, Juzgado, Juzgado Ejecución
+ *
+ * NOTA: Las rutas de asociación a procesos están en procesoRoutes.js
  */
+
+/**
+ * @route   GET /api/victimas/stats
+ * @desc    Obtener estadísticas de víctimas
+ * @access  Private
+ */
+router.get(
+    '/stats',
+    authMiddleware,
+    asyncHandler(victimaController.getStats)
+);
 
 /**
  * @route   GET /api/victimas
@@ -29,17 +41,6 @@ router.get(
     authMiddleware,
     validatePagination,
     asyncHandler(victimaController.getAll)
-);
-
-/**
- * @route   GET /api/victimas/stats
- * @desc    Obtener estadísticas de víctimas
- * @access  Private
- */
-router.get(
-    '/stats',
-    authMiddleware,
-    asyncHandler(victimaController.getStats)
 );
 
 /**
@@ -117,97 +118,6 @@ router.delete(
     adminOnly,
     validateId,
     asyncHandler(victimaController.remove)
-);
-
-/**
- * @route   GET /api/procesos/:id/victimas
- * @desc    Obtener víctimas de un proceso
- * @access  Private
- */
-router.get(
-    '/procesos/:id/victimas',
-    authMiddleware,
-    validateId,
-    asyncHandler(victimaController.getVictimasByProceso)
-);
-
-/**
- * @route   POST /api/procesos/:id/victimas
- * @desc    Asociar víctima a proceso
- * @body    { victima_id }
- * @access  Private (Admin, Juzgado, Juzgado Ejecución)
- */
-router.post(
-    '/procesos/:id/victimas',
-    authMiddleware,
-    (req, res, next) => {
-        const { rol_nombre } = req.user;
-        const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
-
-        if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
-            return next(new ForbiddenError(
-                `No tienes permisos para asociar víctimas a procesos. ` +
-                `Roles permitidos: ${rolesPermitidos.join(', ')}`
-            ));
-        }
-
-        next();
-    },
-    validateId,
-    asyncHandler(victimaController.asociarAProceso)
-);
-
-/**
- * @route   POST /api/procesos/:id/victimas/multiples
- * @desc    Asociar múltiples víctimas a proceso
- * @body    { victimas_ids: [1, 2, 3] }
- * @access  Private (Admin, Juzgado, Juzgado Ejecución)
- */
-router.post(
-    '/procesos/:id/victimas/multiples',
-    authMiddleware,
-    (req, res, next) => {
-        const { rol_nombre } = req.user;
-        const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
-
-        if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
-            return next(new ForbiddenError(
-                `No tienes permisos para asociar víctimas a procesos. ` +
-                `Roles permitidos: ${rolesPermitidos.join(', ')}`
-            ));
-        }
-
-        next();
-    },
-    validateId,
-    asyncHandler(victimaController.asociarMultiples)
-);
-
-/**
- * @route   DELETE /api/procesos/:id/victimas/:victima_id
- * @desc    Desasociar víctima de proceso
- * @access  Private (Admin, Juzgado, Juzgado Ejecución)
- */
-router.delete(
-    '/procesos/:id/victimas/:victima_id',
-    authMiddleware,
-    (req, res, next) => {
-        const { rol_nombre } = req.user;
-        const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
-
-        if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
-            return next(new ForbiddenError(
-                `No tienes permisos para desasociar víctimas de procesos. ` +
-                `Roles permitidos: ${rolesPermitidos.join(', ')}`
-            ));
-        }
-
-        next();
-    },
-    asyncHandler(victimaController.desasociarDeProceso)
 );
 
 module.exports = router;

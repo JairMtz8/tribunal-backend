@@ -2,13 +2,14 @@
 
 const cjConductaModel = require('../models/cjConductaModel');
 const { successResponse, createdResponse } = require('../utils/response');
-const { validateRequiredFields } = require('../utils/errorHandler');
+const { validateRequiredFields, BadRequestError } = require('../utils/errorHandler');
 const { SUCCESS_MESSAGES } = require('../config/constants');
 
 /**
  * CONTROLADOR DE CJ_CONDUCTA
  *
  * Gestiona las conductas/delitos del adolescente en una CJ
+ * Ahora incluye soporte para calificativas
  */
 
 /**
@@ -47,10 +48,11 @@ const getById = async (req, res) => {
 const create = async (req, res) => {
     validateRequiredFields(req.body, ['cj_id']);
 
-    // Al menos debe tener conducta_id O texto_conducta
-    if (!req.body.conducta_id && !req.body.texto_conducta) {
-        const { BadRequestError } = require('../utils/errorHandler');
-        throw new BadRequestError('Debe proporcionar conducta_id o texto_conducta');
+    // Debe tener al menos conducta_id o especificacion_adicional
+    if (!req.body.conducta_id && !req.body.especificacion_adicional) {
+        throw new BadRequestError(
+            'Debe proporcionar conducta_id o especificacion_adicional'
+        );
     }
 
     const id = await cjConductaModel.create(req.body);
@@ -102,7 +104,7 @@ const getStats = async (req, res) => {
     return successResponse(
         res,
         stats,
-        'Estadísticas obtenidas exitosamente'
+        'Estadísticas por calificativa obtenidas exitosamente'
     );
 };
 
@@ -123,6 +125,19 @@ const getMasFrecuentes = async (req, res) => {
     );
 };
 
+/**
+ * ESTADÍSTICAS POR DELITO Y CALIFICATIVA
+ */
+const getStatsByDelitoCalificativa = async (req, res) => {
+    const stats = await cjConductaModel.getStatsByDelitoCalificativa();
+
+    return successResponse(
+        res,
+        stats,
+        'Estadísticas por delito y calificativa obtenidas exitosamente'
+    );
+};
+
 module.exports = {
     getByCjId,
     getById,
@@ -130,5 +145,6 @@ module.exports = {
     update,
     remove,
     getStats,
-    getMasFrecuentes
+    getMasFrecuentes,
+    getStatsByDelitoCalificativa
 };
