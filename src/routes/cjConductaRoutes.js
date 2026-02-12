@@ -6,7 +6,7 @@ const cjConductaController = require('../controllers/cjConductaController');
 const { asyncHandler } = require('../middlewares/errorMiddleware');
 const { authMiddleware } = require('../middlewares/auth');
 const { canConsultar, canModificar, canEliminar } = require('../middlewares/checkCarpetaPermission');
-const { validateId } = require('../middlewares/validate');
+const { validateId, validateCjId } = require('../middlewares/validate');
 
 /**
  * RUTAS DE CJ_CONDUCTA (Conductas del Adolescente)
@@ -54,7 +54,7 @@ router.get(
     '/cj/:cj_id',
     authMiddleware,
     canConsultar('CJ'),
-    validateId,
+    validateCjId,
     asyncHandler(cjConductaController.getByCjId)
 );
 

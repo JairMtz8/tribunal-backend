@@ -6,7 +6,7 @@ const cemciController = require('../controllers/cemciController');
 const { asyncHandler } = require('../middlewares/errorMiddleware');
 const { authMiddleware } = require('../middlewares/auth');
 const { canConsultar, canModificar, canEliminar } = require('../middlewares/checkCarpetaPermission');
-const { validateId } = require('../middlewares/validate');
+const { validateId, validateCjId } = require('../middlewares/validate');
 
 /**
  * RUTAS DE CEMCI
@@ -55,7 +55,7 @@ router.get(
     '/cj/:cj_id',
     authMiddleware,
     canConsultar('CEMCI'),
-    validateId,
+    validateCjId,
     asyncHandler(cemciController.getByCjId)
 );
 
@@ -73,22 +73,11 @@ router.get(
 );
 
 /**
- * @route   POST /api/cemci
- * @desc    Crear CEMCI (manual - normalmente se auto-crea)
- * @body    { numero_cemci, cj_id, cjo_id?, ... }
- * @access  Private (Admin, Juzgado Ejecución)
- */
-router.post(
-    '/',
-    authMiddleware,
-    canModificar('CEMCI'),
-    asyncHandler(cemciController.create)
-);
-
-/**
  * @route   PUT /api/cemci/:id
- * @desc    Actualizar CEMCI
+ * @desc    Actualizar CEMCI (llenar datos adicionales)
+ * @body    { cjo_id?, fecha_recepcion_cemci?, estado_procesal_id?, concluido?, observaciones? }
  * @access  Private (Admin, Juzgado Ejecución)
+ * @note    CEMCI se crea automáticamente al aplicar medida cautelar de internamiento
  */
 router.put(
     '/:id',
@@ -202,6 +191,19 @@ router.delete(
     canEliminar('CEMCI'),
     validateId,
     asyncHandler(cemciController.removeSeguimiento)
+);
+
+/**
+ * @route   PUT /api/cemci/:id/numero
+ * @desc    Actualizar número de CEMCI
+ * @body    { numero_cemci: "CEMCI-010/2025" }
+ * @access  Private
+ */
+router.put(
+    '/:id/numero',
+    authMiddleware,
+    validateId,
+    asyncHandler(cemciController.updateNumero)
 );
 
 module.exports = router;

@@ -274,6 +274,17 @@ const update = async (id, cjData) => {
     `;
 
     await executeQuery(sql, values);
+
+    // Si se actualizó tipo_fuero, propagarlo a CJO si existe
+    if (cjData.tipo_fuero !== undefined) {
+        const updateCjoFuero = `
+            UPDATE cjo
+            SET fuero = ?
+            WHERE cj_id = ?
+        `;
+        await executeQuery(updateCjoFuero, [cjData.tipo_fuero, id]);
+    }
+
     return await getById(id);
 };
 

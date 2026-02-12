@@ -382,6 +382,24 @@ const getStatsSeguimiento = async (req, res) => {
     );
 };
 
+/**
+ * ACTUALIZAR NÚMERO DE CEMS
+ */
+const updateNumero = async (req, res) => {
+    const { id } = req.params;
+    const { numero_cems } = req.body;
+
+    validateRequiredFields(req.body, ['numero_cems']);
+
+    const cems = await cemsModel.updateNumero(id, numero_cems);
+
+    return successResponse(
+        res,
+        cems,
+        'Número de CEMS actualizado exitosamente'
+    );
+};
+
 module.exports = {
     create,
     getAll,
@@ -404,5 +422,6 @@ module.exports = {
     getCumplimientoAnticipado,
     getSustraidos,
     getConOrdenLibrada,
-    getStatsSeguimiento
+    getStatsSeguimiento,
+    updateNumero
 };

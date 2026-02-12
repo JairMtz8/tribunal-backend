@@ -2,6 +2,9 @@
 
 const procesoModel = require('../models/procesoModel');
 const cjModel = require('../models/cjModel');
+const cjoModel = require('../models/cjoModel');
+const cemciModel = require('../models/cemciModel');
+const cemsModel = require('../models/cemsModel');
 const procesoCarpetaModel = require('../models/procesoCarpetaModel');
 const { executeTransaction } = require('../config/database');
 const { successResponse, createdResponse, paginatedResponse, getPaginationParams } = require('../utils/response');
@@ -125,19 +128,35 @@ const getProcesoCompleto = async (procesoId) => {
     const proceso = await procesoModel.getById(procesoId);
     const procesoCarpeta = await procesoCarpetaModel.getByProcesoId(procesoId);
 
-    // Obtener CJ si existe
+    // Obtener todas las carpetas si existen
     let cj = null;
+    let cjo = null;
+    let cemci = null;
+    let cems = null;
+
     if (procesoCarpeta.cj_id) {
         cj = await cjModel.getById(procesoCarpeta.cj_id);
+    }
+
+    if (procesoCarpeta.cjo_id) {
+        cjo = await cjoModel.getById(procesoCarpeta.cjo_id);
+    }
+
+    if (procesoCarpeta.cemci_id) {
+        cemci = await cemciModel.getById(procesoCarpeta.cemci_id);
+    }
+
+    if (procesoCarpeta.cems_id) {
+        cems = await cemsModel.getById(procesoCarpeta.cems_id);
     }
 
     return {
         proceso,
         carpetas: {
             cj,
-            cjo: null,  // Aún no implementado
-            cemci: null,  // Aún no implementado
-            cems: null   // Aún no implementado
+            cjo,
+            cemci,
+            cems
         }
     };
 };

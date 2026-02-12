@@ -2,6 +2,7 @@
 
 const { executeQuery } = require('../config/database');
 const { NotFoundError, ConflictError, BadRequestError } = require('../utils/errorHandler');
+const {validarFormatoNumeroCarpeta, existeNumeroCarpeta} = require("../utils/carpetaUtils");
 
 /**
  * MODELO DE CEMCI
@@ -43,11 +44,11 @@ const create = async (cemciData) => {
     }
 
     const sql = `
-    INSERT INTO cemci (
-      numero_cemci, cj_id, cjo_id, fecha_recepcion_cemci,
-      estado_procesal_id, concluido, observaciones
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
+        INSERT INTO cemci (
+            numero_cemci, cj_id, cjo_id, fecha_recepcion_cemci,
+            estado_procesal_id, concluido, observaciones
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
 
     const result = await executeQuery(sql, [
         numero_cemci,
@@ -69,17 +70,17 @@ const getAll = async (filters = {}) => {
     const { estado_procesal_id, concluido } = filters;
 
     let sql = `
-    SELECT 
-      c.*,
-      cj.numero_cj,
-      cjo.numero_cjo,
-      ep.nombre as estado_procesal_nombre
-    FROM cemci c
-    INNER JOIN cj ON c.cj_id = cj.id_cj
-    LEFT JOIN cjo ON c.cjo_id = cjo.id_cjo
-    LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
-    WHERE 1=1
-  `;
+        SELECT
+            c.*,
+            cj.numero_cj,
+            cjo.numero_cjo,
+            ep.nombre as estado_procesal_nombre
+        FROM cemci c
+                 INNER JOIN cj ON c.cj_id = cj.id_cj
+                 LEFT JOIN cjo ON c.cjo_id = cjo.id_cjo
+                 LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
+        WHERE 1=1
+    `;
     const params = [];
 
     if (estado_procesal_id) {
@@ -102,17 +103,17 @@ const getAll = async (filters = {}) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      c.*,
-      cj.numero_cj,
-      cjo.numero_cjo,
-      ep.nombre as estado_procesal_nombre
-    FROM cemci c
-    INNER JOIN cj ON c.cj_id = cj.id_cj
-    LEFT JOIN cjo ON c.cjo_id = cjo.id_cjo
-    LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
-    WHERE c.id_cemci = ?
-  `;
+        SELECT
+            c.*,
+            cj.numero_cj,
+            cjo.numero_cjo,
+            ep.nombre as estado_procesal_nombre
+        FROM cemci c
+                 INNER JOIN cj ON c.cj_id = cj.id_cj
+                 LEFT JOIN cjo ON c.cjo_id = cjo.id_cjo
+                 LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
+        WHERE c.id_cemci = ?
+    `;
 
     const [cemci] = await executeQuery(sql, [id]);
 
@@ -128,15 +129,15 @@ const getById = async (id) => {
  */
 const getByCjId = async (cjId) => {
     const sql = `
-    SELECT 
-      c.*,
-      cj.numero_cj,
-      ep.nombre as estado_procesal_nombre
-    FROM cemci c
-    INNER JOIN cj ON c.cj_id = cj.id_cj
-    LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
-    WHERE c.cj_id = ?
-  `;
+        SELECT
+            c.*,
+            cj.numero_cj,
+            ep.nombre as estado_procesal_nombre
+        FROM cemci c
+                 INNER JOIN cj ON c.cj_id = cj.id_cj
+                 LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
+        WHERE c.cj_id = ?
+    `;
 
     const [cemci] = await executeQuery(sql, [cjId]);
     return cemci || null;
@@ -170,10 +171,10 @@ const update = async (id, cemciData) => {
     values.push(id);
 
     const sql = `
-    UPDATE cemci 
-    SET ${updates.join(', ')}
-    WHERE id_cemci = ?
-  `;
+        UPDATE cemci
+        SET ${updates.join(', ')}
+        WHERE id_cemci = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);
@@ -214,14 +215,14 @@ const getCount = async (filters = {}) => {
  */
 const getStats = async () => {
     const sql = `
-    SELECT 
-      COUNT(*) as total,
-      COUNT(CASE WHEN cjo_id IS NOT NULL THEN 1 END) as con_cjo,
-      COUNT(CASE WHEN cjo_id IS NULL THEN 1 END) as sin_cjo,
-      COUNT(CASE WHEN concluido IS NOT NULL THEN 1 END) as concluidas,
-      COUNT(CASE WHEN concluido IS NULL THEN 1 END) as activas
-    FROM cemci
-  `;
+        SELECT
+            COUNT(*) as total,
+            COUNT(CASE WHEN cjo_id IS NOT NULL THEN 1 END) as con_cjo,
+            COUNT(CASE WHEN cjo_id IS NULL THEN 1 END) as sin_cjo,
+            COUNT(CASE WHEN concluido IS NOT NULL THEN 1 END) as concluidas,
+            COUNT(CASE WHEN concluido IS NULL THEN 1 END) as activas
+        FROM cemci
+    `;
 
     const [stats] = await executeQuery(sql);
     return stats;
@@ -232,16 +233,47 @@ const getStats = async () => {
  */
 const tieneCemci = async (procesoId) => {
     const sql = `
-    SELECT cemci_id 
-    FROM proceso_carpeta 
-    WHERE id_proceso = ?
-  `;
+        SELECT cemci_id
+        FROM proceso_carpeta
+        WHERE id_proceso = ?
+    `;
 
     const [result] = await executeQuery(sql, [procesoId]);
     return result && result.cemci_id ? true : false;
 };
 
+
+/**
+ * ACTUALIZAR NÚMERO DE CEMCI
+ */
+const updateNumero = async (id, nuevoNumero) => {
+    const { validarFormatoNumeroCarpeta, existeNumeroCarpeta } = require('../utils/carpetaUtils');
+
+    // Verificar que existe
+    await getById(id);
+
+    // Validar formato
+    if (!validarFormatoNumeroCarpeta(nuevoNumero, 'CEMCI')) {
+        throw new BadRequestError(
+            'Formato inválido. Debe ser CEMCI-###/YYYY (ej: CEMCI-008/2025)'
+        );
+    }
+
+    // Verificar duplicados
+    const existe = await existeNumeroCarpeta(nuevoNumero, 'CEMCI', id);
+    if (existe) {
+        throw new ConflictError(`El número ${nuevoNumero} ya está en uso`);
+    }
+
+    // Actualizar
+    const sql = `UPDATE cemci SET numero_cemci = ? WHERE id_cemci = ?`;
+    await executeQuery(sql, [nuevoNumero, id]);
+
+    return await getById(id);
+};
+
 module.exports = {
+    updateNumero,
     create,
     getAll,
     getById,

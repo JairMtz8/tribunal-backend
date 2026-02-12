@@ -6,7 +6,7 @@ const internamientoController = require('../controllers/internamientoController'
 const { asyncHandler } = require('../middlewares/errorMiddleware');
 const { authMiddleware } = require('../middlewares/auth');
 const { adminOnly } = require('../middlewares/checkRole');
-const { validateId } = require('../middlewares/validate');
+const { validateId, validateProcesoId } = require('../middlewares/validate');
 
 /**
  * RUTAS DE INTERNAMIENTO
@@ -69,7 +69,7 @@ router.get(
 router.get(
     '/proceso/:proceso_id',
     authMiddleware,
-    validateId,
+    validateProcesoId,
     asyncHandler(internamientoController.getByProcesoId)
 );
 

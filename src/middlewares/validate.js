@@ -65,6 +65,36 @@ const validateId = [
 ];
 
 /**
+ * Validar CJ_ID numérico
+ */
+const validateCjId = [
+    param('cj_id')
+        .isInt({ min: 1 })
+        .withMessage('El CJ_ID debe ser un número entero positivo'),
+    validate
+];
+
+/**
+ * Validar CJO_ID numérico
+ */
+const validateCjoId = [
+    param('cjo_id')
+        .isInt({ min: 1 })
+        .withMessage('El CJO_ID debe ser un número entero positivo'),
+    validate
+];
+
+/**
+ * Validar PROCESO_ID numérico
+ */
+const validateProcesoId = [
+    param('proceso_id')
+        .isInt({ min: 1 })
+        .withMessage('El PROCESO_ID debe ser un número entero positivo'),
+    validate
+];
+
+/**
  * Validar creación de catálogo
  */
 const validateCatalogoCreate = [
@@ -483,6 +513,9 @@ module.exports = {
     validate,
     validateCatalogoTipo,
     validateId,
+    validateCjId,
+    validateCjoId,
+    validateProcesoId,
     validateCatalogoCreate,
     validateCatalogoUpdate,
     validatePagination,

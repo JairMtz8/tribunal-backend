@@ -6,7 +6,7 @@ const audienciaController = require('../controllers/audienciaController');
 const { asyncHandler } = require('../middlewares/errorMiddleware');
 const { authMiddleware } = require('../middlewares/auth');
 const { adminOnly } = require('../middlewares/checkRole');
-const { validateId } = require('../middlewares/validate');
+const { validateId, validateProcesoId } = require('../middlewares/validate');
 
 /**
  * RUTAS DE AUDIENCIAS
@@ -83,7 +83,7 @@ router.get(
 router.get(
     '/proceso/:proceso_id',
     authMiddleware,
-    validateId,
+    validateProcesoId,
     asyncHandler(audienciaController.getByProcesoId)
 );
 

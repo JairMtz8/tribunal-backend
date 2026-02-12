@@ -45,9 +45,9 @@ const create = async (seguimientoData) => {
 
     // Verificar que no exista ya el seguimiento
     const existeCheck = `
-    SELECT * FROM cemci_seguimiento 
-    WHERE cemci_id = ? AND proceso_id = ?
-  `;
+        SELECT * FROM cemci_seguimiento
+        WHERE cemci_id = ? AND proceso_id = ?
+    `;
     const [existe] = await executeQuery(existeCheck, [cemci_id, proceso_id]);
 
     if (existe) {
@@ -55,18 +55,18 @@ const create = async (seguimientoData) => {
     }
 
     const sql = `
-    INSERT INTO cemci_seguimiento (
-      cemci_id, proceso_id,
-      fecha_aprobacion_plan_actividades,
-      fecha_recepcion_plan_actividades,
-      obligaciones_plan_actividades,
-      ultimo_informe,
-      fecha_audiencia_inicial_cemci,
-      fecha_radicacion,
-      fecha_suspension,
-      motivo_suspension
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+        INSERT INTO cemci_seguimiento (
+            cemci_id, proceso_id,
+            fecha_aprobacion_plan_actividades,
+            fecha_recepcion_plan_actividades,
+            obligaciones_plan_actividades,
+            ultimo_informe,
+            fecha_audiencia_inicial_cemci,
+            fecha_radicacion,
+            fecha_suspension,
+            motivo_suspension
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
     const result = await executeQuery(sql, [
         cemci_id,
@@ -89,17 +89,17 @@ const create = async (seguimientoData) => {
  */
 const getByCemciId = async (cemciId) => {
     const sql = `
-    SELECT 
-      cs.*,
-      p.id_proceso,
-      a.nombre as adolescente_nombre,
-      a.iniciales as adolescente_iniciales
-    FROM cemci_seguimiento cs
-    INNER JOIN proceso p ON cs.proceso_id = p.id_proceso
-    INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
-    WHERE cs.cemci_id = ?
-    ORDER BY cs.fecha_radicacion DESC
-  `;
+        SELECT
+            cs.*,
+            p.id_proceso,
+            a.nombre as adolescente_nombre,
+            a.iniciales as adolescente_iniciales
+        FROM cemci_seguimiento cs
+                 INNER JOIN proceso p ON cs.proceso_id = p.id_proceso
+                 INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        WHERE cs.cemci_id = ?
+        ORDER BY cs.fecha_radicacion DESC
+    `;
 
     return await executeQuery(sql, [cemciId]);
 };
@@ -109,14 +109,14 @@ const getByCemciId = async (cemciId) => {
  */
 const getByProcesoId = async (procesoId) => {
     const sql = `
-    SELECT 
-      cs.*,
-      c.numero_cemci,
-      c.fecha_recepcion_cemci
-    FROM cemci_seguimiento cs
-    INNER JOIN cemci c ON cs.cemci_id = c.id_cemci
-    WHERE cs.proceso_id = ?
-  `;
+        SELECT
+            cs.*,
+            c.numero_cemci,
+            c.fecha_recepcion_cemci
+        FROM cemci_seguimiento cs
+                 INNER JOIN cemci c ON cs.cemci_id = c.id_cemci
+        WHERE cs.proceso_id = ?
+    `;
 
     const [seguimiento] = await executeQuery(sql, [procesoId]);
     return seguimiento || null;
@@ -127,17 +127,17 @@ const getByProcesoId = async (procesoId) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      cs.*,
-      c.numero_cemci,
-      p.id_proceso,
-      a.nombre as adolescente_nombre
-    FROM cemci_seguimiento cs
-    INNER JOIN cemci c ON cs.cemci_id = c.id_cemci
-    INNER JOIN proceso p ON cs.proceso_id = p.id_proceso
-    INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
-    WHERE cs.id_seguimiento = ?
-  `;
+        SELECT
+            cs.*,
+            c.numero_cemci,
+            p.id_proceso,
+            a.nombre as adolescente_nombre
+        FROM cemci_seguimiento cs
+                 INNER JOIN cemci c ON cs.cemci_id = c.id_cemci
+                 INNER JOIN proceso p ON cs.proceso_id = p.id_proceso
+                 INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        WHERE cs.id_seguimiento = ?
+    `;
 
     const [seguimiento] = await executeQuery(sql, [id]);
 
@@ -182,10 +182,10 @@ const update = async (id, seguimientoData) => {
     values.push(id);
 
     const sql = `
-    UPDATE cemci_seguimiento 
-    SET ${updates.join(', ')}
-    WHERE id_seguimiento = ?
-  `;
+        UPDATE cemci_seguimiento
+        SET ${updates.join(', ')}
+        WHERE id_seguimiento = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);
@@ -208,10 +208,10 @@ const remove = async (id) => {
  */
 const countByCemci = async (cemciId) => {
     const sql = `
-    SELECT COUNT(*) as total 
-    FROM cemci_seguimiento 
-    WHERE cemci_id = ?
-  `;
+        SELECT COUNT(*) as total
+        FROM cemci_seguimiento
+        WHERE cemci_id = ?
+    `;
 
     const [result] = await executeQuery(sql, [cemciId]);
     return result.total;
@@ -230,17 +230,17 @@ const tieneSeguimiento = async (procesoId) => {
  */
 const getSuspendidos = async () => {
     const sql = `
-    SELECT 
-      cs.*,
-      c.numero_cemci,
-      a.nombre as adolescente_nombre
-    FROM cemci_seguimiento cs
-    INNER JOIN cemci c ON cs.cemci_id = c.id_cemci
-    INNER JOIN proceso p ON cs.proceso_id = p.id_proceso
-    INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
-    WHERE cs.fecha_suspension IS NOT NULL
-    ORDER BY cs.fecha_suspension DESC
-  `;
+        SELECT
+            cs.*,
+            c.numero_cemci,
+            a.nombre as adolescente_nombre
+        FROM cemci_seguimiento cs
+                 INNER JOIN cemci c ON cs.cemci_id = c.id_cemci
+                 INNER JOIN proceso p ON cs.proceso_id = p.id_proceso
+                 INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        WHERE cs.fecha_suspension IS NOT NULL
+        ORDER BY cs.fecha_suspension DESC
+    `;
 
     return await executeQuery(sql);
 };
@@ -250,13 +250,13 @@ const getSuspendidos = async () => {
  */
 const getStats = async () => {
     const sql = `
-    SELECT 
-      COUNT(*) as total,
-      COUNT(CASE WHEN fecha_suspension IS NOT NULL THEN 1 END) as suspendidos,
-      COUNT(CASE WHEN fecha_radicacion IS NOT NULL THEN 1 END) as radicados,
-      COUNT(CASE WHEN fecha_aprobacion_plan_actividades IS NOT NULL THEN 1 END) as con_plan_aprobado
-    FROM cemci_seguimiento
-  `;
+        SELECT
+            COUNT(*) as total,
+            COUNT(CASE WHEN fecha_suspension IS NOT NULL THEN 1 END) as suspendidos,
+            COUNT(CASE WHEN fecha_radicacion IS NOT NULL THEN 1 END) as radicados,
+            COUNT(CASE WHEN fecha_aprobacion_plan_actividades IS NOT NULL THEN 1 END) as con_plan_aprobado
+        FROM cemci_seguimiento
+    `;
 
     const [stats] = await executeQuery(sql);
     return stats;

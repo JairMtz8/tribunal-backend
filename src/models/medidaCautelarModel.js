@@ -2,6 +2,7 @@
 
 const { executeQuery, executeTransaction } = require('../config/database');
 const { NotFoundError, ConflictError, BadRequestError } = require('../utils/errorHandler');
+const { generarNumeroCarpeta } = require('../utils/carpetaUtils');
 
 /**
  * MODELO DE MEDIDA CAUTELAR
@@ -33,9 +34,9 @@ const create = async (medidaData) => {
 
     // Verificar que el tipo de medida existe y obtener si genera CEMCI
     const tipoCheck = `
-    SELECT * FROM tipo_medida_cautelar 
-    WHERE id_tipo_medida_cautelar = ?
-  `;
+        SELECT * FROM tipo_medida_cautelar
+        WHERE id_tipo_medida_cautelar = ?
+    `;
     const [tipoMedida] = await executeQuery(tipoCheck, [tipo_medida_cautelar_id]);
 
     if (!tipoMedida) {
@@ -44,9 +45,9 @@ const create = async (medidaData) => {
 
     // Verificar que el proceso tenga CJ (necesario para CEMCI)
     const cjCheck = `
-    SELECT cj_id FROM proceso_carpeta 
-    WHERE id_proceso = ?
-  `;
+        SELECT cj_id FROM proceso_carpeta
+        WHERE id_proceso = ?
+    `;
     const [procesoCarpeta] = await executeQuery(cjCheck, [proceso_id]);
 
     if (!procesoCarpeta || !procesoCarpeta.cj_id) {
@@ -59,13 +60,13 @@ const create = async (medidaData) => {
     return await executeTransaction(async (connection) => {
         // 1. Crear la medida cautelar
         const medidaSql = `
-      INSERT INTO medida_cautelar (
-        proceso_id, 
-        tipo_medida_cautelar_id, 
-        fecha_medida_cautelar,
-        observaciones
-      ) VALUES (?, ?, ?, ?)
-    `;
+            INSERT INTO medida_cautelar (
+                proceso_id,
+                tipo_medida_cautelar_id,
+                fecha_medida_cautelar,
+                observaciones
+            ) VALUES (?, ?, ?, ?)
+        `;
 
         const [medidaResult] = await connection.execute(medidaSql, [
             proceso_id,
@@ -81,20 +82,20 @@ const create = async (medidaData) => {
         if (tipoMedida.genera_cemci) {
             // Verificar si ya existe CEMCI para este proceso
             const cemciExistente = `
-        SELECT cemci_id FROM proceso_carpeta 
-        WHERE id_proceso = ?
-      `;
+                SELECT cemci_id FROM proceso_carpeta
+                WHERE id_proceso = ?
+            `;
             const [procesoCarpetaActual] = await connection.execute(cemciExistente, [proceso_id]);
 
             if (!procesoCarpetaActual.cemci_id) {
-                // Generar número de CEMCI
-                const numeroCemci = `CEMCI-${proceso_id}-${Date.now()}`;
+                // Generar número de CEMCI en formato CEMCI-###/YYYY
+                const numeroCemci = await generarNumeroCarpeta('CEMCI');
 
                 // Crear CEMCI
                 const cemciSql = `
-          INSERT INTO cemci (numero_cemci, cj_id)
-          VALUES (?, ?)
-        `;
+                    INSERT INTO cemci (numero_cemci, cj_id)
+                    VALUES (?, ?)
+                `;
 
                 const [cemciResult] = await connection.execute(cemciSql, [
                     numeroCemci,
@@ -105,10 +106,10 @@ const create = async (medidaData) => {
 
                 // Actualizar proceso_carpeta con el CEMCI
                 const updateProcesoCarpeta = `
-          UPDATE proceso_carpeta 
-          SET cemci_id = ?
-          WHERE id_proceso = ?
-        `;
+                    UPDATE proceso_carpeta
+                    SET cemci_id = ?
+                    WHERE id_proceso = ?
+                `;
 
                 await connection.execute(updateProcesoCarpeta, [cemci_id, proceso_id]);
             } else {
@@ -129,16 +130,16 @@ const create = async (medidaData) => {
  */
 const getByProcesoId = async (procesoId) => {
     const sql = `
-    SELECT 
-      mc.*,
-      tmc.nombre as tipo_nombre,
-      tmc.genera_cemci
-    FROM medida_cautelar mc
-    INNER JOIN tipo_medida_cautelar tmc 
-      ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
-    WHERE mc.proceso_id = ?
-    ORDER BY mc.fecha_medida_cautelar DESC
-  `;
+        SELECT
+            mc.*,
+            tmc.nombre as tipo_nombre,
+            tmc.genera_cemci
+        FROM medida_cautelar mc
+                 INNER JOIN tipo_medida_cautelar tmc
+                            ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
+        WHERE mc.proceso_id = ?
+        ORDER BY mc.fecha_medida_cautelar DESC
+    `;
 
     return await executeQuery(sql, [procesoId]);
 };
@@ -148,15 +149,15 @@ const getByProcesoId = async (procesoId) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      mc.*,
-      tmc.nombre as tipo_nombre,
-      tmc.genera_cemci
-    FROM medida_cautelar mc
-    INNER JOIN tipo_medida_cautelar tmc 
-      ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
-    WHERE mc.id_medida_cautelar = ?
-  `;
+        SELECT
+            mc.*,
+            tmc.nombre as tipo_nombre,
+            tmc.genera_cemci
+        FROM medida_cautelar mc
+                 INNER JOIN tipo_medida_cautelar tmc
+                            ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
+        WHERE mc.id_medida_cautelar = ?
+    `;
 
     const [medida] = await executeQuery(sql, [id]);
 
@@ -198,10 +199,10 @@ const update = async (id, medidaData) => {
     values.push(id);
 
     const sql = `
-    UPDATE medida_cautelar 
-    SET ${updates.join(', ')}
-    WHERE id_medida_cautelar = ?
-  `;
+        UPDATE medida_cautelar
+        SET ${updates.join(', ')}
+        WHERE id_medida_cautelar = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);
@@ -218,11 +219,11 @@ const revocar = async (id, fechaRevocacion) => {
     }
 
     const sql = `
-    UPDATE medida_cautelar 
-    SET revocacion_medida = TRUE,
-        fecha_revocacion_medida = ?
-    WHERE id_medida_cautelar = ?
-  `;
+        UPDATE medida_cautelar
+        SET revocacion_medida = TRUE,
+            fecha_revocacion_medida = ?
+        WHERE id_medida_cautelar = ?
+    `;
 
     await executeQuery(sql, [fechaRevocacion || new Date(), id]);
     return await getById(id);
@@ -245,14 +246,14 @@ const remove = async (id) => {
  */
 const tieneMedidasPrivativas = async (procesoId) => {
     const sql = `
-    SELECT COUNT(*) as count
-    FROM medida_cautelar mc
-    INNER JOIN tipo_medida_cautelar tmc 
-      ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
-    WHERE mc.proceso_id = ?
-      AND tmc.genera_cemci = TRUE
-      AND mc.revocacion_medida = FALSE
-  `;
+        SELECT COUNT(*) as count
+        FROM medida_cautelar mc
+            INNER JOIN tipo_medida_cautelar tmc
+        ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
+        WHERE mc.proceso_id = ?
+          AND tmc.genera_cemci = TRUE
+          AND mc.revocacion_medida = FALSE
+    `;
 
     const [result] = await executeQuery(sql, [procesoId]);
     return result.count > 0;
@@ -263,10 +264,10 @@ const tieneMedidasPrivativas = async (procesoId) => {
  */
 const countByProceso = async (procesoId) => {
     const sql = `
-    SELECT COUNT(*) as total 
-    FROM medida_cautelar 
-    WHERE proceso_id = ?
-  `;
+        SELECT COUNT(*) as total
+        FROM medida_cautelar
+        WHERE proceso_id = ?
+    `;
 
     const [result] = await executeQuery(sql, [procesoId]);
     return result.total;
@@ -277,17 +278,17 @@ const countByProceso = async (procesoId) => {
  */
 const getMedidasActivas = async (procesoId) => {
     const sql = `
-    SELECT 
-      mc.*,
-      tmc.nombre as tipo_nombre,
-      tmc.genera_cemci
-    FROM medida_cautelar mc
-    INNER JOIN tipo_medida_cautelar tmc 
-      ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
-    WHERE mc.proceso_id = ?
-      AND mc.revocacion_medida = FALSE
-    ORDER BY mc.fecha_medida_cautelar DESC
-  `;
+        SELECT
+            mc.*,
+            tmc.nombre as tipo_nombre,
+            tmc.genera_cemci
+        FROM medida_cautelar mc
+                 INNER JOIN tipo_medida_cautelar tmc
+                            ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
+        WHERE mc.proceso_id = ?
+          AND mc.revocacion_medida = FALSE
+        ORDER BY mc.fecha_medida_cautelar DESC
+    `;
 
     return await executeQuery(sql, [procesoId]);
 };
@@ -297,18 +298,18 @@ const getMedidasActivas = async (procesoId) => {
  */
 const getStats = async () => {
     const sql = `
-    SELECT 
-      tmc.nombre as tipo,
-      COUNT(*) as total,
-      SUM(CASE WHEN mc.revocacion_medida = FALSE THEN 1 ELSE 0 END) as activas,
-      SUM(CASE WHEN mc.revocacion_medida = TRUE THEN 1 ELSE 0 END) as revocadas,
-      SUM(CASE WHEN tmc.genera_cemci = TRUE THEN 1 ELSE 0 END) as privativas
-    FROM medida_cautelar mc
-    INNER JOIN tipo_medida_cautelar tmc 
-      ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
-    GROUP BY tmc.nombre
-    ORDER BY total DESC
-  `;
+        SELECT
+            tmc.nombre as tipo,
+            COUNT(*) as total,
+            SUM(CASE WHEN mc.revocacion_medida = FALSE THEN 1 ELSE 0 END) as activas,
+            SUM(CASE WHEN mc.revocacion_medida = TRUE THEN 1 ELSE 0 END) as revocadas,
+            SUM(CASE WHEN tmc.genera_cemci = TRUE THEN 1 ELSE 0 END) as privativas
+        FROM medida_cautelar mc
+                 INNER JOIN tipo_medida_cautelar tmc
+                            ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
+        GROUP BY tmc.nombre
+        ORDER BY total DESC
+    `;
 
     return await executeQuery(sql);
 };

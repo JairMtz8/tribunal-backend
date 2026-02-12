@@ -6,7 +6,7 @@ const cemsController = require('../controllers/cemsController');
 const { asyncHandler } = require('../middlewares/errorMiddleware');
 const { authMiddleware } = require('../middlewares/auth');
 const { canConsultar, canModificar, canEliminar } = require('../middlewares/checkCarpetaPermission');
-const { validateId } = require('../middlewares/validate');
+const { validateId, validateCjoId } = require('../middlewares/validate');
 
 /**
  * RUTAS DE CEMS
@@ -55,7 +55,7 @@ router.get(
     '/cjo/:cjo_id',
     authMiddleware,
     canConsultar('CEMS'),
-    validateId,
+    validateCjoId,
     asyncHandler(cemsController.getByCjoId)
 );
 
@@ -73,22 +73,11 @@ router.get(
 );
 
 /**
- * @route   POST /api/cems
- * @desc    Crear CEMS (manual - normalmente se auto-crea)
- * @body    { numero_cems, cj_id, cjo_id, cemci_id?, ... }
- * @access  Private (Admin, Juzgado Ejecución)
- */
-router.post(
-    '/',
-    authMiddleware,
-    canModificar('CEMS'),
-    asyncHandler(cemsController.create)
-);
-
-/**
  * @route   PUT /api/cems/:id
- * @desc    Actualizar CEMS
+ * @desc    Actualizar CEMS (llenar datos adicionales)
+ * @body    { cemci_id?, fecha_recepcion?, estado_procesal_id?, status?, observaciones?, ... }
  * @access  Private (Admin, Juzgado Ejecución)
+ * @note    CEMS se crea automáticamente al dictar sentencia condenatoria/mixta
  */
 router.put(
     '/:id',
@@ -307,6 +296,19 @@ router.delete(
     canEliminar('CEMS'),
     validateId,
     asyncHandler(cemsController.removeSeguimiento)
+);
+
+/**
+ * @route   PUT /api/cems/:id/numero
+ * @desc    Actualizar número de CEMS
+ * @body    { numero_cems: "CEMS-020/2025" }
+ * @access  Private
+ */
+router.put(
+    '/:id/numero',
+    authMiddleware,
+    validateId,
+    asyncHandler(cemsController.updateNumero)
 );
 
 module.exports = router;

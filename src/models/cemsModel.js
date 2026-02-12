@@ -60,14 +60,14 @@ const create = async (cemsData) => {
     }
 
     const sql = `
-    INSERT INTO cems (
-      numero_cems, cj_id, cjo_id, cemci_id,
-      fecha_recepcion, estado_procesal_id, status,
-      jto, cmva, ceip, plan_actividad_fecha_inicio,
-      declinacion_comperencia, estado_declina, estado_recibe,
-      adolescentes_orden_comparencia, observaciones
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+        INSERT INTO cems (
+            numero_cems, cj_id, cjo_id, cemci_id,
+            fecha_recepcion, estado_procesal_id, status,
+            jto, cmva, ceip, plan_actividad_fecha_inicio,
+            declinacion_comperencia, estado_declina, estado_recibe,
+            adolescentes_orden_comparencia, observaciones
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
     const result = await executeQuery(sql, [
         numero_cems,
@@ -98,17 +98,17 @@ const getAll = async (filters = {}) => {
     const { estado_procesal_id, status } = filters;
 
     let sql = `
-    SELECT 
-      cs.*,
-      cj.numero_cj,
-      cjo.numero_cjo,
-      ep.nombre as estado_procesal_nombre
-    FROM cems cs
-    INNER JOIN cj ON cs.cj_id = cj.id_cj
-    INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
-    LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
-    WHERE 1=1
-  `;
+        SELECT
+            cs.*,
+            cj.numero_cj,
+            cjo.numero_cjo,
+            ep.nombre as estado_procesal_nombre
+        FROM cems cs
+                 INNER JOIN cj ON cs.cj_id = cj.id_cj
+                 INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
+                 LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+        WHERE 1=1
+    `;
     const params = [];
 
     if (estado_procesal_id) {
@@ -131,19 +131,19 @@ const getAll = async (filters = {}) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      cs.*,
-      cj.numero_cj,
-      cjo.numero_cjo,
-      cemci.numero_cemci,
-      ep.nombre as estado_procesal_nombre
-    FROM cems cs
-    INNER JOIN cj ON cs.cj_id = cj.id_cj
-    INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
-    LEFT JOIN cemci ON cs.cemci_id = cemci.id_cemci
-    LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
-    WHERE cs.id_cems = ?
-  `;
+        SELECT
+            cs.*,
+            cj.numero_cj,
+            cjo.numero_cjo,
+            cemci.numero_cemci,
+            ep.nombre as estado_procesal_nombre
+        FROM cems cs
+                 INNER JOIN cj ON cs.cj_id = cj.id_cj
+                 INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
+                 LEFT JOIN cemci ON cs.cemci_id = cemci.id_cemci
+                 LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+        WHERE cs.id_cems = ?
+    `;
 
     const [cems] = await executeQuery(sql, [id]);
 
@@ -159,17 +159,17 @@ const getById = async (id) => {
  */
 const getByCjoId = async (cjoId) => {
     const sql = `
-    SELECT 
-      cs.*,
-      cj.numero_cj,
-      cjo.numero_cjo,
-      ep.nombre as estado_procesal_nombre
-    FROM cems cs
-    INNER JOIN cj ON cs.cj_id = cj.id_cj
-    INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
-    LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
-    WHERE cs.cjo_id = ?
-  `;
+        SELECT
+            cs.*,
+            cj.numero_cj,
+            cjo.numero_cjo,
+            ep.nombre as estado_procesal_nombre
+        FROM cems cs
+                 INNER JOIN cj ON cs.cj_id = cj.id_cj
+                 INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
+                 LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+        WHERE cs.cjo_id = ?
+    `;
 
     const [cems] = await executeQuery(sql, [cjoId]);
     return cems || null;
@@ -205,10 +205,10 @@ const update = async (id, cemsData) => {
     values.push(id);
 
     const sql = `
-    UPDATE cems 
-    SET ${updates.join(', ')}
-    WHERE id_cems = ?
-  `;
+        UPDATE cems
+        SET ${updates.join(', ')}
+        WHERE id_cems = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);
@@ -249,15 +249,15 @@ const getCount = async (filters = {}) => {
  */
 const getStats = async () => {
     const sql = `
-    SELECT 
-      COUNT(*) as total,
-      COUNT(CASE WHEN cemci_id IS NOT NULL THEN 1 END) as con_cemci,
-      COUNT(CASE WHEN cemci_id IS NULL THEN 1 END) as sin_cemci,
-      COUNT(CASE WHEN status = TRUE THEN 1 END) as activos,
-      COUNT(CASE WHEN status = FALSE THEN 1 END) as inactivos,
-      COUNT(CASE WHEN declinacion_comperencia = TRUE THEN 1 END) as con_declinacion
-    FROM cems
-  `;
+        SELECT
+            COUNT(*) as total,
+            COUNT(CASE WHEN cemci_id IS NOT NULL THEN 1 END) as con_cemci,
+            COUNT(CASE WHEN cemci_id IS NULL THEN 1 END) as sin_cemci,
+            COUNT(CASE WHEN status = TRUE THEN 1 END) as activos,
+            COUNT(CASE WHEN status = FALSE THEN 1 END) as inactivos,
+            COUNT(CASE WHEN declinacion_comperencia = TRUE THEN 1 END) as con_declinacion
+        FROM cems
+    `;
 
     const [stats] = await executeQuery(sql);
     return stats;
@@ -268,16 +268,46 @@ const getStats = async () => {
  */
 const tieneCems = async (procesoId) => {
     const sql = `
-    SELECT cems_id 
-    FROM proceso_carpeta 
-    WHERE id_proceso = ?
-  `;
+        SELECT cems_id
+        FROM proceso_carpeta
+        WHERE id_proceso = ?
+    `;
 
     const [result] = await executeQuery(sql, [procesoId]);
     return result && result.cems_id ? true : false;
 };
 
+/**
+ * ACTUALIZAR NÚMERO DE CEMS
+ */
+const updateNumero = async (id, nuevoNumero) => {
+    const { validarFormatoNumeroCarpeta, existeNumeroCarpeta } = require('../utils/carpetaUtils');
+
+    // Verificar que existe
+    await getById(id);
+
+    // Validar formato
+    if (!validarFormatoNumeroCarpeta(nuevoNumero, 'CEMS')) {
+        throw new BadRequestError(
+            'Formato inválido. Debe ser CEMS-###/YYYY (ej: CEMS-017/2025)'
+        );
+    }
+
+    // Verificar duplicados
+    const existe = await existeNumeroCarpeta(nuevoNumero, 'CEMS', id);
+    if (existe) {
+        throw new ConflictError(`El número ${nuevoNumero} ya está en uso`);
+    }
+
+    // Actualizar
+    const sql = `UPDATE cems SET numero_cems = ? WHERE id_cems = ?`;
+    await executeQuery(sql, [nuevoNumero, id]);
+
+    return await getById(id);
+};
+
 module.exports = {
+    updateNumero,
     create,
     getAll,
     getById,

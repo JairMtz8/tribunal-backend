@@ -245,6 +245,24 @@ const getStatsSeguimiento = async (req, res) => {
     );
 };
 
+/**
+ * ACTUALIZAR NÚMERO DE CEMCI
+ */
+const updateNumero = async (req, res) => {
+    const { id } = req.params;
+    const { numero_cemci } = req.body;
+
+    validateRequiredFields(req.body, ['numero_cemci']);
+
+    const cemci = await cemciModel.updateNumero(id, numero_cemci);
+
+    return successResponse(
+        res,
+        cemci,
+        'Número de CEMCI actualizado exitosamente'
+    );
+};
+
 module.exports = {
     create,
     getAll,
@@ -259,5 +277,6 @@ module.exports = {
     updateSeguimiento,
     removeSeguimiento,
     getSuspendidos,
-    getStatsSeguimiento
+    getStatsSeguimiento,
+    updateNumero
 };
