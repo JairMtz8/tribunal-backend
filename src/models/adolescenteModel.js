@@ -118,15 +118,15 @@ const getAll = async (options = {}) => {
     const { search, sexo, edad_min, edad_max, limit, offset } = options;
 
     let sql = `
-    SELECT 
-      a.*,
-      d.municipio as domicilio_municipio,
-      d.calle_numero as domicilio_calle,
-      d.colonia as domicilio_colonia
-    FROM adolescente a
-    LEFT JOIN domicilio d ON a.domicilio_id = d.id_domicilio
-    WHERE 1=1
-  `;
+        SELECT
+            a.*,
+            d.municipio as domicilio_municipio,
+            d.calle_numero as domicilio_calle,
+            d.colonia as domicilio_colonia
+        FROM adolescente a
+                 LEFT JOIN domicilio d ON a.domicilio_id = d.id_domicilio
+        WHERE 1=1
+    `;
 
     const params = [];
 
@@ -159,10 +159,13 @@ const getAll = async (options = {}) => {
 
     sql += ` ORDER BY a.nombre ASC`;
 
-    // Paginación
     if (limit) {
-        sql += ` LIMIT ? OFFSET ?`;
-        params.push(limit, offset || 0);
+        // Convertir a enteros para evitar inyección SQL
+        const limitInt = parseInt(limit) || 10;
+        const offsetInt = parseInt(offset) || 0;
+
+        // IMPORTANTE: LIMIT y OFFSET deben ir como valores directos, NO como ?
+        sql += ` LIMIT ${limitInt} OFFSET ${offsetInt}`;
     }
 
     const adolescentes = await executeQuery(sql, params);
