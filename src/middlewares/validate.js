@@ -1,7 +1,7 @@
 // src/middlewares/validate.js
 
-const { validationResult, body, param, query } = require('express-validator');
-const { ValidationError } = require('../utils/errorHandler');
+const {validationResult, body, param, query} = require('express-validator');
+const {ValidationError} = require('../utils/errorHandler');
 
 /**
  * MIDDLEWARE DE VALIDACIÓN
@@ -17,6 +17,14 @@ const validate = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+        // 🔍 DEBUG: Ver qué campos están fallando
+        console.log('❌ ERRORES DE VALIDACIÓN:');
+        errors.array().forEach(err => {
+            console.log(`  - Campo: ${err.path || err.param}`);
+            console.log(`    Valor: ${JSON.stringify(err.value)}`);
+            console.log(`    Error: ${err.msg}`);
+        });
+
         // Formatear errores
         const formattedErrors = errors.array().map(err => ({
             field: err.path || err.param,
@@ -59,7 +67,7 @@ const validateCatalogoTipo = [
  */
 const validateId = [
     param('id')
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('El ID debe ser un número entero positivo'),
     validate
 ];
@@ -69,7 +77,7 @@ const validateId = [
  */
 const validateCjId = [
     param('cj_id')
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('El CJ_ID debe ser un número entero positivo'),
     validate
 ];
@@ -79,7 +87,7 @@ const validateCjId = [
  */
 const validateCjoId = [
     param('cjo_id')
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('El CJO_ID debe ser un número entero positivo'),
     validate
 ];
@@ -89,7 +97,7 @@ const validateCjoId = [
  */
 const validateProcesoId = [
     param('proceso_id')
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('El PROCESO_ID debe ser un número entero positivo'),
     validate
 ];
@@ -102,13 +110,13 @@ const validateCatalogoCreate = [
         .trim()
         .notEmpty()
         .withMessage('El nombre es obligatorio')
-        .isLength({ max: 150 })
+        .isLength({max: 150})
         .withMessage('El nombre no puede tener más de 150 caracteres'),
 
     body('descripcion')
         .optional()
         .trim()
-        .isLength({ max: 150 })
+        .isLength({max: 150})
         .withMessage('La descripción no puede tener más de 150 caracteres'),
 
     // Para tipos de medidas sancionadoras
@@ -135,13 +143,13 @@ const validateCatalogoUpdate = [
         .trim()
         .notEmpty()
         .withMessage('El nombre no puede estar vacío')
-        .isLength({ max: 150 })
+        .isLength({max: 150})
         .withMessage('El nombre no puede tener más de 150 caracteres'),
 
     body('descripcion')
         .optional()
         .trim()
-        .isLength({ max: 150 })
+        .isLength({max: 150})
         .withMessage('La descripción no puede tener más de 150 caracteres'),
 
     body('es_privativa')
@@ -163,18 +171,18 @@ const validateCatalogoUpdate = [
 const validatePagination = [
     query('page')
         .optional()
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('page debe ser un número entero mayor a 0'),
 
     query('limit')
         .optional()
-        .isInt({ min: 1, max: 100 })
+        .isInt({min: 1, max: 100})
         .withMessage('limit debe ser un número entre 1 y 100'),
 
     query('search')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('search no puede tener más de 100 caracteres'),
 
     validate
@@ -202,7 +210,7 @@ const validateDate = (fieldName) => {
  */
 const validateDateBefore = (field1, field2) => {
     return body(field2)
-        .custom((value, { req }) => {
+        .custom((value, {req}) => {
             if (!value || !req.body[field1]) {
                 return true; // Si alguna no existe, pasar (se valida con .optional())
             }
@@ -252,7 +260,7 @@ const validateBoolean = (fieldName) => {
 };
 
 // =====================================================
-// VALIDACIONES PARA ADOLESCENTES
+// VALIDACIONES PARA ADOLESCENTES - CORREGIDO
 // =====================================================
 
 /**
@@ -263,19 +271,19 @@ const validateAdolescenteCreate = [
         .trim()
         .notEmpty()
         .withMessage('El nombre es obligatorio')
-        .isLength({ max: 150 })
+        .isLength({max: 150})
         .withMessage('El nombre no puede tener más de 150 caracteres'),
 
     body('iniciales')
         .optional()
         .trim()
-        .isLength({ max: 10 })
+        .isLength({max: 10})
         .withMessage('Las iniciales no pueden tener más de 10 caracteres'),
 
     body('sexo')
         .optional()
-        .isIn(['Hombre', 'Mujer', 'Otro'])
-        .withMessage('Sexo debe ser: Hombre, Mujer u Otro'),
+        .isIn(['HOMBRE', 'MUJER', 'OTRO'])
+        .withMessage('Sexo debe ser: HOMBRE, MUJER u OTRO'),
 
     body('fecha_nacimiento')
         .notEmpty()
@@ -288,6 +296,9 @@ const validateAdolescenteCreate = [
                 throw new Error('Fecha de nacimiento inválida');
             }
 
+            // ⚠️ VALIDACIÓN DE EDAD COMENTADA PARA MIGRACIÓN
+            // Descomentar después de migrar datos históricos
+            /*
             // Calcular edad
             const hoy = new Date();
             let edad = hoy.getFullYear() - fecha.getFullYear();
@@ -299,6 +310,7 @@ const validateAdolescenteCreate = [
             if (edad < 12 || edad > 17) {
                 throw new Error(`La edad debe estar entre 12 y 17 años (edad calculada: ${edad})`);
             }
+            */
 
             return true;
         }),
@@ -306,49 +318,49 @@ const validateAdolescenteCreate = [
     body('nacionalidad')
         .optional()
         .trim()
-        .isLength({ max: 50 })
+        .isLength({max: 50})
         .withMessage('La nacionalidad no puede tener más de 50 caracteres'),
 
     body('idioma')
         .optional()
         .trim()
-        .isLength({ max: 50 })
+        .isLength({max: 50})
         .withMessage('El idioma no puede tener más de 50 caracteres'),
 
     body('otro_idioma_lengua')
         .optional()
         .trim()
-        .isLength({ max: 50 })
+        .isLength({max: 50})
         .withMessage('Otro idioma no puede tener más de 50 caracteres'),
 
     body('escolaridad')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('La escolaridad no puede tener más de 100 caracteres'),
 
     body('ocupacion')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('La ocupación no puede tener más de 100 caracteres'),
 
     body('estado_civil')
         .optional()
         .trim()
-        .isLength({ max: 50 })
+        .isLength({max: 50})
         .withMessage('El estado civil no puede tener más de 50 caracteres'),
 
     body('lugar_nacimiento_municipio')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('El municipio no puede tener más de 100 caracteres'),
 
     body('lugar_nacimiento_estado')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('El estado no puede tener más de 100 caracteres'),
 
     body('fuma_cigarro')
@@ -369,17 +381,17 @@ const validateAdolescenteCreate = [
     body('tipo_droga')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('El tipo de droga no puede tener más de 100 caracteres'),
 
     body('telefono')
         .optional()
         .trim()
-        .isLength({ max: 50 })
+        .isLength({max: 50})
         .withMessage('El teléfono no puede tener más de 50 caracteres'),
 
     body('correo')
-        .optional()
+        .optional({ checkFalsy: true })
         .trim()
         .isEmail()
         .withMessage('Correo inválido')
@@ -388,26 +400,26 @@ const validateAdolescenteCreate = [
     // Validación de domicilio_id (si se usa domicilio existente)
     body('domicilio_id')
         .optional()
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('domicilio_id debe ser un número entero positivo'),
 
     // Validación de domicilio (objeto anidado)
     body('domicilio.municipio')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('El municipio no puede tener más de 100 caracteres'),
 
     body('domicilio.calle_numero')
         .optional()
         .trim()
-        .isLength({ max: 200 })
+        .isLength({max: 200})
         .withMessage('La calle y número no puede tener más de 200 caracteres'),
 
     body('domicilio.colonia')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('La colonia no puede tener más de 100 caracteres'),
 
     validate
@@ -422,19 +434,19 @@ const validateAdolescenteUpdate = [
         .trim()
         .notEmpty()
         .withMessage('El nombre no puede estar vacío')
-        .isLength({ max: 150 })
+        .isLength({max: 150})
         .withMessage('El nombre no puede tener más de 150 caracteres'),
 
     body('iniciales')
         .optional()
         .trim()
-        .isLength({ max: 10 })
+        .isLength({max: 10})
         .withMessage('Las iniciales no pueden tener más de 10 caracteres'),
 
     body('sexo')
         .optional()
-        .isIn(['Hombre', 'Mujer', 'Otro'])
-        .withMessage('Sexo debe ser: Hombre, Mujer u Otro'),
+        .isIn(['HOMBRE', 'MUJER', 'OTRO'])
+        .withMessage('Sexo debe ser: HOMBRE, MUJER u OTRO'),
 
     body('fecha_nacimiento')
         .optional()
@@ -446,6 +458,9 @@ const validateAdolescenteUpdate = [
                 throw new Error('Fecha de nacimiento inválida');
             }
 
+            // ⚠️ VALIDACIÓN DE EDAD COMENTADA PARA MIGRACIÓN
+            // Descomentar después de migrar datos históricos
+            /*
             const hoy = new Date();
             let edad = hoy.getFullYear() - fecha.getFullYear();
             const mes = hoy.getMonth() - fecha.getMonth();
@@ -456,6 +471,7 @@ const validateAdolescenteUpdate = [
             if (edad < 12 || edad > 17) {
                 throw new Error(`La edad debe estar entre 12 y 17 años (edad calculada: ${edad})`);
             }
+            */
 
             return true;
         }),
@@ -463,11 +479,11 @@ const validateAdolescenteUpdate = [
     body('telefono')
         .optional()
         .trim()
-        .isLength({ max: 50 })
+        .isLength({max: 50})
         .withMessage('El teléfono no puede tener más de 50 caracteres'),
 
     body('correo')
-        .optional()
+        .optional({ checkFalsy: true })
         .trim()
         .isEmail()
         .withMessage('Correo inválido')
@@ -491,19 +507,19 @@ const validateAdolescenteUpdate = [
     body('domicilio.municipio')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('El municipio no puede tener más de 100 caracteres'),
 
     body('domicilio.calle_numero')
         .optional()
         .trim()
-        .isLength({ max: 200 })
+        .isLength({max: 200})
         .withMessage('La calle y número no puede tener más de 200 caracteres'),
 
     body('domicilio.colonia')
         .optional()
         .trim()
-        .isLength({ max: 100 })
+        .isLength({max: 100})
         .withMessage('La colonia no puede tener más de 100 caracteres'),
 
     validate

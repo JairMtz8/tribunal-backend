@@ -33,6 +33,10 @@ const calcularEdad = (fechaNacimiento) => {
  * HELPER: Validar edad entre 12 y 17 años
  */
 const validarEdadAdolescente = (fechaNacimiento) => {
+    // ⚠️ VALIDACIÓN DESACTIVADA TEMPORALMENTE PARA MIGRACIÓN
+    return; // ← Agregar esta línea
+
+    /* COMENTAR TODO ESTO:
     if (!fechaNacimiento) {
         throw new BadRequestError('La fecha de nacimiento es obligatoria');
     }
@@ -46,6 +50,7 @@ const validarEdadAdolescente = (fechaNacimiento) => {
     }
 
     return edad;
+    */
 };
 
 /**
@@ -90,8 +95,8 @@ const create = async (adolescenteData) => {
             adolescenteData.iniciales || null,
             adolescenteData.sexo || null,
             adolescenteData.fecha_nacimiento,
-            adolescenteData.nacionalidad || 'Mexicana',
-            adolescenteData.idioma || 'Español',
+            adolescenteData.nacionalidad || 'MEXICANA',
+            adolescenteData.idioma || 'ESPAÑOL',
             adolescenteData.otro_idioma_lengua || null,
             adolescenteData.escolaridad || null,
             adolescenteData.ocupacion || null,
