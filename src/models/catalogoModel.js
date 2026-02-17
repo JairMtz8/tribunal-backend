@@ -1,7 +1,7 @@
 // src/models/catalogoModel.js
 
-const { executeQuery } = require('../config/database');
-const { NotFoundError, ConflictError } = require('../utils/errorHandler');
+const {executeQuery} = require('../config/database');
+const {NotFoundError, ConflictError} = require('../utils/errorHandler');
 
 /**
  * MODELO DE CATÁLOGOS
@@ -77,9 +77,10 @@ const getTableConfig = (tipo) => {
 // =====================================================
 const getAll = async (tipo, options = {}) => {
     const config = getTableConfig(tipo);
-    const { search, limit, offset } = options;
+    const {search, limit, offset} = options;
 
-    let sql = `SELECT * FROM ${config.table}`;
+    let sql = `SELECT *
+               FROM ${config.table}`;
     const params = [];
 
     // Filtro de búsqueda
@@ -90,10 +91,10 @@ const getAll = async (tipo, options = {}) => {
 
     sql += ` ORDER BY ${config.nameField} ASC`;
 
-    // Paginación
     if (limit) {
-        sql += ` LIMIT ? OFFSET ?`;
-        params.push(limit, offset || 0);
+        const limitInt = parseInt(limit) || 10;
+        const offsetInt = parseInt(offset) || 0;
+        sql += ` LIMIT ${limitInt} OFFSET ${offsetInt}`;
     }
 
     const rows = await executeQuery(sql, params);
@@ -106,7 +107,8 @@ const getAll = async (tipo, options = {}) => {
 const getCount = async (tipo, search = null) => {
     const config = getTableConfig(tipo);
 
-    let sql = `SELECT COUNT(*) as total FROM ${config.table}`;
+    let sql = `SELECT COUNT(*) as total
+               FROM ${config.table}`;
     const params = [];
 
     if (search) {
@@ -124,7 +126,9 @@ const getCount = async (tipo, search = null) => {
 const getById = async (tipo, id) => {
     const config = getTableConfig(tipo);
 
-    const sql = `SELECT * FROM ${config.table} WHERE ${config.idField} = ?`;
+    const sql = `SELECT *
+                 FROM ${config.table}
+                 WHERE ${config.idField} = ?`;
     const [row] = await executeQuery(sql, [id]);
 
     if (!row) {
@@ -162,9 +166,9 @@ const create = async (tipo, data) => {
     });
 
     const sql = `
-    INSERT INTO ${config.table} (${fields.join(', ')})
-    VALUES (${placeholders.join(', ')})
-  `;
+        INSERT INTO ${config.table} (${fields.join(', ')})
+        VALUES (${placeholders.join(', ')})
+    `;
 
     try {
         const result = await executeQuery(sql, values);
@@ -217,10 +221,10 @@ const update = async (tipo, id, data) => {
     values.push(id);
 
     const sql = `
-    UPDATE ${config.table}
-    SET ${updates.join(', ')}
-    WHERE ${config.idField} = ?
-  `;
+        UPDATE ${config.table}
+        SET ${updates.join(', ')}
+        WHERE ${config.idField} = ?
+    `;
 
     try {
         await executeQuery(sql, values);
@@ -242,7 +246,9 @@ const remove = async (tipo, id) => {
     // Verificar que existe
     const record = await getById(tipo, id);
 
-    const sql = `DELETE FROM ${config.table} WHERE ${config.idField} = ?`;
+    const sql = `DELETE
+                 FROM ${config.table}
+                 WHERE ${config.idField} = ?`;
 
     try {
         await executeQuery(sql, [id]);
@@ -264,7 +270,9 @@ const remove = async (tipo, id) => {
 const existsByName = async (tipo, nombre, excludeId = null) => {
     const config = getTableConfig(tipo);
 
-    let sql = `SELECT ${config.idField} FROM ${config.table} WHERE ${config.nameField} = ?`;
+    let sql = `SELECT ${config.idField}
+               FROM ${config.table}
+               WHERE ${config.nameField} = ?`;
     const params = [nombre];
 
     if (excludeId) {
