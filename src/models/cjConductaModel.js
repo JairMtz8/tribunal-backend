@@ -12,6 +12,15 @@ const { NotFoundError, ConflictError, BadRequestError } = require('../utils/erro
  */
 
 /**
+ * Formatear fecha a formato MySQL (YYYY-MM-DD)
+ */
+const formatDateForMySQL = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // "2026-02-01"
+};
+
+/**
  * CREAR CONDUCTA DEL ADOLESCENTE
  */
 const create = async (conductaData) => {
@@ -23,43 +32,9 @@ const create = async (conductaData) => {
         fecha_conducta
     } = conductaData;
 
-    // Verificar que la CJ existe
-    const cjCheck = `SELECT id_cj FROM cj WHERE id_cj = ?`;
-    const [cj] = await executeQuery(cjCheck, [cj_id]);
-
-    if (!cj) {
-        throw new NotFoundError('La CJ especificada no existe');
-    }
-
-    // Verificar que la conducta del catálogo existe
-    if (conducta_id) {
-        const conductaCheck = `SELECT id_conducta FROM conducta WHERE id_conducta = ?`;
-        const [conducta] = await executeQuery(conductaCheck, [conducta_id]);
-
-        if (!conducta) {
-            throw new NotFoundError('La conducta del catálogo no existe');
-        }
-    }
-
-    // Verificar que la calificativa existe
-    if (calificativa_id) {
-        const calificativaCheck = `
-            SELECT id_calificativa, nombre 
-            FROM calificativa_delito 
-            WHERE id_calificativa = ?
-        `;
-        const [calificativa] = await executeQuery(calificativaCheck, [calificativa_id]);
-
-        if (!calificativa) {
-            throw new NotFoundError('La calificativa del catálogo no existe');
-        }
-
-        // Si calificativa es "Otro" (id: 8), validar que haya especificacion_adicional
-        if (calificativa.nombre.toLowerCase() === 'otro' && !especificacion_adicional) {
-            throw new BadRequestError(
-                'Cuando la calificativa es "Otro", debe proporcionar especificacion_adicional'
-            );
-        }
+    // Validaciones
+    if (!cj_id || !conducta_id || !calificativa_id) {
+        throw new BadRequestError('Campos requeridos: cj_id, conducta_id, calificativa_id');
     }
 
     const sql = `
@@ -75,13 +50,20 @@ const create = async (conductaData) => {
 
     const result = await executeQuery(sql, [
         cj_id,
-        conducta_id || null,
-        calificativa_id || null,
+        conducta_id,
+        calificativa_id,
         especificacion_adicional || null,
-        fecha_conducta || null
+        formatDateForMySQL(fecha_conducta)
     ]);
 
-    return result.insertId;
+    return {
+        id_conducta: result.insertId,
+        cj_id,
+        conducta_id,
+        calificativa_id,
+        especificacion_adicional,
+        fecha_conducta
+    };
 };
 
 /**

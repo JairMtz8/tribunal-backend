@@ -3,10 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const actorJuridicoController = require('../controllers/actorJuridicoController');
-const { asyncHandler } = require('../middlewares/errorMiddleware');
-const { authMiddleware } = require('../middlewares/auth');
-const { adminOnly } = require('../middlewares/checkRole');
-const { validateId } = require('../middlewares/validate');
+const {asyncHandler} = require('../middlewares/errorMiddleware');
+const {authMiddleware} = require('../middlewares/auth');
+const {adminOnly} = require('../middlewares/checkRole');
+const {validateId} = require('../middlewares/validate');
 
 /**
  * RUTAS DE ACTORES JURÍDICOS
@@ -55,6 +55,40 @@ router.get(
 );
 
 /**
+ * @route   GET /api/actores/search
+ * @desc    Buscar actores por nombre
+ * @query   q (query string)
+ * @access  Private
+ */
+router.get(
+    '/search',
+    authMiddleware,
+    asyncHandler(async (req, res) => {
+        const {q} = req.query;
+
+        if (!q || q.length < 3) {
+            return res.json({success: true, data: []});
+        }
+
+        const sql = `
+            SELECT *
+            FROM actor_juridico
+            WHERE nombre LIKE ?
+            ORDER BY nombre LIMIT 10
+        `;
+
+        const {executeQuery} = require('../config/database');
+        const actores = await executeQuery(sql, [`%${q}%`]);
+
+        return res.json({
+            success: true,
+            data: actores
+        });
+    })
+);
+
+
+/**
  * @route   GET /api/actores/:id
  * @desc    Obtener actor por ID (con procesos)
  * @access  Private
@@ -76,11 +110,11 @@ router.post(
     '/',
     authMiddleware,
     (req, res, next) => {
-        const { rol_nombre } = req.user;
+        const {rol_nombre} = req.user;
         const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
+            const {ForbiddenError} = require('../utils/errorHandler');
             return next(new ForbiddenError(
                 `No tienes permisos para crear actores jurídicos. ` +
                 `Roles permitidos: ${rolesPermitidos.join(', ')}`
@@ -101,11 +135,11 @@ router.put(
     '/:id',
     authMiddleware,
     (req, res, next) => {
-        const { rol_nombre } = req.user;
+        const {rol_nombre} = req.user;
         const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
+            const {ForbiddenError} = require('../utils/errorHandler');
             return next(new ForbiddenError(
                 `No tienes permisos para modificar actores jurídicos. ` +
                 `Roles permitidos: ${rolesPermitidos.join(', ')}`

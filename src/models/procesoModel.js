@@ -52,23 +52,26 @@ const create = async (procesoData) => {
 };
 
 /**
- * OBTENER TODOS (con información de adolescente)
+ * OBTENER TODOS (con información de adolescente Y número de CJ)
  */
 const getAll = async (filters = {}) => {
-    const { status_id, search } = filters;
+    const { status_id, search, limit, offset } = filters;
 
     let sql = `
-    SELECT 
-      p.*,
-      a.nombre as adolescente_nombre,
-      a.iniciales as adolescente_iniciales,
-      a.fecha_nacimiento as adolescente_fecha_nacimiento,
-      s.nombre as status_nombre
-    FROM proceso p
-    INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
-    LEFT JOIN status s ON p.status_id = s.id_status
-    WHERE 1=1
-  `;
+        SELECT
+            p.*,
+            a.nombre as adolescente_nombre,
+            a.iniciales as adolescente_iniciales,
+            a.fecha_nacimiento as adolescente_fecha_nacimiento,
+            s.nombre as status_nombre,
+            cj.numero_cj as cj_numero
+        FROM proceso p
+                 INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+                 LEFT JOIN status s ON p.status_id = s.id_status
+                 LEFT JOIN proceso_carpeta pc ON p.id_proceso = pc.id_proceso
+                 LEFT JOIN cj ON pc.cj_id = cj.id_cj
+        WHERE 1=1
+    `;
 
     const params = [];
 
@@ -78,13 +81,20 @@ const getAll = async (filters = {}) => {
         params.push(status_id);
     }
 
-    // Búsqueda por nombre de adolescente
+    // Búsqueda por nombre de adolescente o número CJ
     if (search) {
-        sql += ` AND (a.nombre LIKE ? OR a.iniciales LIKE ?)`;
-        params.push(`%${search}%`, `%${search}%`);
+        sql += ` AND (a.nombre LIKE ? OR a.iniciales LIKE ? OR cj.numero_cj LIKE ?)`;
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     sql += ` ORDER BY p.id_proceso DESC`;
+
+    // Paginación (si se especifica)
+    if (limit) {
+        const limitInt = parseInt(limit) || 10;
+        const offsetInt = parseInt(offset) || 0;
+        sql += ` LIMIT ${limitInt} OFFSET ${offsetInt}`;
+    }
 
     return await executeQuery(sql, params);
 };

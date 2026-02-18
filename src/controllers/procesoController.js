@@ -6,10 +6,10 @@ const cjoModel = require('../models/cjoModel');
 const cemciModel = require('../models/cemciModel');
 const cemsModel = require('../models/cemsModel');
 const procesoCarpetaModel = require('../models/procesoCarpetaModel');
-const { executeTransaction } = require('../config/database');
-const { successResponse, createdResponse, paginatedResponse, getPaginationParams } = require('../utils/response');
-const { validateRequiredFields, BadRequestError } = require('../utils/errorHandler');
-const { SUCCESS_MESSAGES } = require('../config/constants');
+const {executeTransaction} = require('../config/database');
+const {successResponse, createdResponse, paginatedResponse, getPaginationParams} = require('../utils/response');
+const {validateRequiredFields, BadRequestError} = require('../utils/errorHandler');
+const {SUCCESS_MESSAGES} = require('../config/constants');
 
 /**
  * CONTROLADOR DE PROCESO
@@ -22,7 +22,7 @@ const { SUCCESS_MESSAGES } = require('../config/constants');
  * Ambos se crean en una sola transacción
  */
 const create = async (req, res) => {
-    const { adolescente_id, status_id, observaciones } = req.body;
+    const {adolescente_id, status_id, observaciones} = req.body;
 
     // Validar campos requeridos
     validateRequiredFields(req.body, ['adolescente_id']);
@@ -37,58 +37,65 @@ const create = async (req, res) => {
         throw new BadRequestError('El campo numero_cj es obligatorio');
     }
 
+    // ===== FIX: Formatear fechas a YYYY-MM-DD =====
+    const formatDate = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0]; // "2026-02-02"
+    };
+
     // Crear proceso + CJ + proceso_carpeta en una transacción
     const result = await executeTransaction(async (connection) => {
         // 1. Crear el proceso
         const [procesoResult] = await connection.execute(
-            `INSERT INTO proceso (adolescente_id, status_id, observaciones) VALUES (?, ?, ?)`,
+            `INSERT INTO proceso (adolescente_id, status_id, observaciones)
+             VALUES (?, ?, ?)`,
             [adolescente_id, status_id || null, observaciones || null]
         );
 
         const procesoId = procesoResult.insertId;
 
-        // 2. Crear la CJ
+        // 2. Crear la CJ con fechas formateadas
         const cjSql = `
-      INSERT INTO cj (
-        numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
-        tipo_narcotico_asegurado, peso_narcotico_gramos,
-        control, lesiones, fecha_control, fecha_formulacion,
-        vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
-        suspension_condicional_proceso_prueba, plazo_suspension,
-        fecha_suspension, fecha_terminacion_suspension,
-        audiencia_intermedia, fecha_audiencia_intermedia,
-        estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
-        medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
-        corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
-        observaciones, observaciones_adicionales, domicilio_hechos_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+            INSERT INTO cj (numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
+                            tipo_narcotico_asegurado, peso_narcotico_gramos,
+                            control, lesiones, fecha_control, fecha_formulacion,
+                            vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
+                            suspension_condicional_proceso_prueba, plazo_suspension,
+                            fecha_suspension, fecha_terminacion_suspension,
+                            audiencia_intermedia, fecha_audiencia_intermedia,
+                            estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
+                            medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
+                            corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
+                            observaciones, observaciones_adicionales, domicilio_hechos_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
         const [cjResult] = await connection.execute(cjSql, [
             cjData.numero_cj,
-            cjData.fecha_ingreso || null,
+            formatDate(cjData.fecha_ingreso), // ← FORMATEADA
             cjData.tipo_fuero || null,
             cjData.numero_ampea || null,
             cjData.tipo_narcotico_asegurado || null,
             cjData.peso_narcotico_gramos || null,
             cjData.control || false,
             cjData.lesiones || false,
-            cjData.fecha_control || null,
-            cjData.fecha_formulacion || null,
+            formatDate(cjData.fecha_control), // ← FORMATEADA
+            formatDate(cjData.fecha_formulacion), // ← FORMATEADA
             cjData.vinculacion || false,
-            cjData.fecha_vinculacion || null,
+            formatDate(cjData.fecha_vinculacion), // ← FORMATEADA
             cjData.conducta_vinculacion || null,
             cjData.declaro || null,
             cjData.suspension_condicional_proceso_prueba || false,
             cjData.plazo_suspension || null,
-            cjData.fecha_suspension || null,
-            cjData.fecha_terminacion_suspension || null,
+            formatDate(cjData.fecha_suspension), // ← FORMATEADA
+            formatDate(cjData.fecha_terminacion_suspension), // ← FORMATEADA
             cjData.audiencia_intermedia || false,
-            cjData.fecha_audiencia_intermedia || null,
+            formatDate(cjData.fecha_audiencia_intermedia), // ← FORMATEADA
             cjData.estatus_carpeta_preliminar || null,
             cjData.reincidente || false,
             cjData.sustraido || false,
-            cjData.fecha_sustraccion || null,
+            formatDate(cjData.fecha_sustraccion), // ← FORMATEADA
             cjData.medidas_proteccion || null,
             cjData.numero_toca_apelacion || null,
             cjData.numero_total_audiencias || 0,
@@ -104,11 +111,12 @@ const create = async (req, res) => {
 
         // 3. Crear la relación en proceso_carpeta
         await connection.execute(
-            `INSERT INTO proceso_carpeta (id_proceso, cj_id) VALUES (?, ?)`,
+            `INSERT INTO proceso_carpeta (id_proceso, cj_id)
+             VALUES (?, ?)`,
             [procesoId, cjId]
         );
 
-        return { procesoId, cjId };
+        return {procesoId, cjId};
     });
 
     // Obtener el proceso completo recién creado
@@ -116,7 +124,11 @@ const create = async (req, res) => {
 
     return createdResponse(
         res,
-        procesoCompleto,
+        {
+            procesoId: result.procesoId,
+            cjId: result.cjId,
+            ...procesoCompleto
+        },
         'Proceso y carpeta CJ creados exitosamente'
     );
 };
@@ -165,17 +177,17 @@ const getProcesoCompleto = async (procesoId) => {
  * OBTENER TODOS LOS PROCESOS
  */
 const getAll = async (req, res) => {
-    const { search, status_id } = req.query;
+    const {search, status_id} = req.query;
 
     const usePagination = req.query.page || req.query.limit;
 
-    const filters = { search, status_id };
+    const filters = {search, status_id};
 
     if (usePagination) {
-        const { page, limit, offset } = getPaginationParams(req.query.page, req.query.limit);
+        const {page, limit, offset} = getPaginationParams(req.query.page, req.query.limit);
 
         const [procesos, total] = await Promise.all([
-            procesoModel.getAll({ ...filters, limit, offset }),
+            procesoModel.getAll({...filters, limit, offset}),
             procesoModel.getCount(filters)
         ]);
 
@@ -202,7 +214,7 @@ const getAll = async (req, res) => {
  * OBTENER PROCESO POR ID (completo con carpetas)
  */
 const getById = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const procesoCompleto = await getProcesoCompleto(id);
 
@@ -217,7 +229,7 @@ const getById = async (req, res) => {
  * OBTENER PROCESO POR ADOLESCENTE ID
  */
 const getByAdolescente = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const proceso = await procesoModel.getByAdolescenteId(id);
 
@@ -243,8 +255,8 @@ const getByAdolescente = async (req, res) => {
  * Solo actualiza datos del proceso, no de las carpetas
  */
 const update = async (req, res) => {
-    const { id } = req.params;
-    const { status_id, observaciones } = req.body;
+    const {id} = req.params;
+    const {status_id, observaciones} = req.body;
 
     const procesoActualizado = await procesoModel.update(id, {
         status_id,
@@ -263,7 +275,7 @@ const update = async (req, res) => {
  * Solo si no tiene carpetas asociadas
  */
 const remove = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const proceso = await procesoModel.remove(id);
 
@@ -282,9 +294,9 @@ const getStats = async (req, res) => {
 
     // Contar por status (si existen)
     const porStatus = await Promise.all([
-        procesoModel.getCount({ status_id: 1 }),
-        procesoModel.getCount({ status_id: 2 }),
-        procesoModel.getCount({ status_id: 3 })
+        procesoModel.getCount({status_id: 1}),
+        procesoModel.getCount({status_id: 2}),
+        procesoModel.getCount({status_id: 3})
     ]);
 
     const stats = {

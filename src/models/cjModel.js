@@ -1,7 +1,7 @@
 // src/models/cjModel.js
 
-const { executeQuery } = require('../config/database');
-const { NotFoundError, ConflictError, BadRequestError, validateDateSequence } = require('../utils/errorHandler');
+const {executeQuery} = require('../config/database');
+const {NotFoundError, ConflictError, BadRequestError, validateDateSequence} = require('../utils/errorHandler');
 
 /**
  * MODELO DE CJ (Carpeta Judicial)
@@ -50,7 +50,9 @@ const create = async (cjData) => {
     } = cjData;
 
     // Verificar que el número de CJ no exista
-    const checkSql = `SELECT id_cj FROM cj WHERE numero_cj = ?`;
+    const checkSql = `SELECT id_cj
+                      FROM cj
+                      WHERE numero_cj = ?`;
     const [existing] = await executeQuery(checkSql, [numero_cj]);
 
     if (existing) {
@@ -74,19 +76,18 @@ const create = async (cjData) => {
     }
 
     const sql = `
-        INSERT INTO cj (
-            numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
-            tipo_narcotico_asegurado, peso_narcotico_gramos,
-            control, lesiones, fecha_control, fecha_formulacion,
-            vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
-            suspension_condicional_proceso_prueba, plazo_suspension,
-            fecha_suspension, fecha_terminacion_suspension,
-            audiencia_intermedia, fecha_audiencia_intermedia,
-            estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
-            medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
-            corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
-            observaciones, observaciones_adicionales, domicilio_hechos_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO cj (numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
+                        tipo_narcotico_asegurado, peso_narcotico_gramos,
+                        control, lesiones, fecha_control, fecha_formulacion,
+                        vinculacion, fecha_vinculacion, conducta_vinculacion, declaro,
+                        suspension_condicional_proceso_prueba, plazo_suspension,
+                        fecha_suspension, fecha_terminacion_suspension,
+                        audiencia_intermedia, fecha_audiencia_intermedia,
+                        estatus_carpeta_preliminar, reincidente, sustraido, fecha_sustraccion,
+                        medidas_proteccion, numero_toca_apelacion, numero_total_audiencias,
+                        corporacion_ejecutora, representante_pp_nnya, tipo_representacion_pp_nnya,
+                        observaciones, observaciones_adicionales, domicilio_hechos_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const result = await executeQuery(sql, [
@@ -132,17 +133,16 @@ const create = async (cjData) => {
  * OBTENER TODOS
  */
 const getAll = async (filters = {}) => {
-    const { search, tipo_fuero, vinculacion, reincidente } = filters;
+    const {search, tipo_fuero, vinculacion, reincidente} = filters;
 
     let sql = `
-        SELECT
-            c.*,
-            d.municipio as domicilio_hechos_municipio,
-            d.calle_numero as domicilio_hechos_calle,
-            d.colonia as domicilio_hechos_colonia
+        SELECT c.*,
+               d.municipio    as domicilio_hechos_municipio,
+               d.calle_numero as domicilio_hechos_calle,
+               d.colonia      as domicilio_hechos_colonia
         FROM cj c
                  LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
-        WHERE 1=1
+        WHERE 1 = 1
     `;
 
     const params = [];
@@ -173,18 +173,19 @@ const getAll = async (filters = {}) => {
 };
 
 /**
- * OBTENER POR ID (con domicilio de hechos)
+ * OBTENER POR ID (con domicilio de hechos y proceso_id)
  */
 const getById = async (id) => {
     const sql = `
-        SELECT
-            c.*,
-            d.id_domicilio as domicilio_hechos_id,
-            d.municipio as domicilio_hechos_municipio,
-            d.calle_numero as domicilio_hechos_calle,
-            d.colonia as domicilio_hechos_colonia
+        SELECT c.*,
+               d.id_domicilio as domicilio_hechos_id,
+               d.municipio    as domicilio_hechos_municipio,
+               d.calle_numero as domicilio_hechos_calle,
+               d.colonia      as domicilio_hechos_colonia,
+               pc.id_proceso  as proceso_id
         FROM cj c
                  LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
+                 LEFT JOIN proceso_carpeta pc ON c.id_cj = pc.cj_id
         WHERE c.id_cj = ?
     `;
 
@@ -216,7 +217,9 @@ const getById = async (id) => {
  * OBTENER POR NÚMERO DE CJ
  */
 const getByNumero = async (numeroCj) => {
-    const sql = `SELECT * FROM cj WHERE numero_cj = ?`;
+    const sql = `SELECT *
+                 FROM cj
+                 WHERE numero_cj = ?`;
     const [cj] = await executeQuery(sql, [numeroCj]);
     return cj || null;
 };
@@ -295,7 +298,9 @@ const remove = async (id) => {
     const cj = await getById(id);
 
     // Verificar si tiene CJO asociado
-    const cjoCheck = `SELECT id_cjo FROM cjo WHERE cj_id = ?`;
+    const cjoCheck = `SELECT id_cjo
+                      FROM cjo
+                      WHERE cj_id = ?`;
     const [cjo] = await executeQuery(cjoCheck, [id]);
 
     if (cjo) {
@@ -305,7 +310,9 @@ const remove = async (id) => {
         );
     }
 
-    const sql = `DELETE FROM cj WHERE id_cj = ?`;
+    const sql = `DELETE
+                 FROM cj
+                 WHERE id_cj = ?`;
     await executeQuery(sql, [id]);
 
     return cj;
@@ -315,9 +322,11 @@ const remove = async (id) => {
  * CONTAR TOTAL
  */
 const getCount = async (filters = {}) => {
-    const { tipo_fuero, vinculacion, reincidente } = filters;
+    const {tipo_fuero, vinculacion, reincidente} = filters;
 
-    let sql = `SELECT COUNT(*) as total FROM cj WHERE 1=1`;
+    let sql = `SELECT COUNT(*) as total
+               FROM cj
+               WHERE 1 = 1`;
     const params = [];
 
     if (tipo_fuero) {

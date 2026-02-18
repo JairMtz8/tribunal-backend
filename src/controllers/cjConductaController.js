@@ -46,23 +46,23 @@ const getById = async (req, res) => {
  * CREAR CONDUCTA DEL ADOLESCENTE
  */
 const create = async (req, res) => {
-    validateRequiredFields(req.body, ['cj_id']);
+    const { cj_id, conducta_id, calificativa_id, especificacion_adicional, fecha_conducta } = req.body;
 
-    // Debe tener al menos conducta_id o especificacion_adicional
-    if (!req.body.conducta_id && !req.body.especificacion_adicional) {
-        throw new BadRequestError(
-            'Debe proporcionar conducta_id o especificacion_adicional'
-        );
-    }
+    // Validaciones
+    validateRequiredFields(req.body, ['cj_id', 'conducta_id', 'calificativa_id']);
 
-    const id = await cjConductaModel.create(req.body);
-    const conducta = await cjConductaModel.getById(id);
+    // Crear la conducta
+    const nuevaConducta = await cjConductaModel.create({
+        cj_id,
+        conducta_id,
+        calificativa_id,
+        especificacion_adicional: especificacion_adicional || null,
+        fecha_conducta: fecha_conducta || null
+    });
 
-    return createdResponse(
-        res,
-        conducta,
-        'Conducta del adolescente creada exitosamente'
-    );
+    const conductaCompleta = await cjConductaModel.getById(nuevaConducta.id_conducta);
+
+    return createdResponse(res, conductaCompleta, 'Conducta del adolescente creada exitosamente');
 };
 
 /**
