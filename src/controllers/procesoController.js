@@ -6,6 +6,7 @@ const cjoModel = require('../models/cjoModel');
 const cemciModel = require('../models/cemciModel');
 const cemsModel = require('../models/cemsModel');
 const procesoCarpetaModel = require('../models/procesoCarpetaModel');
+const domicilioModel = require('../models/domicilioModel');
 const {executeTransaction} = require('../config/database');
 const {successResponse, createdResponse, paginatedResponse, getPaginationParams} = require('../utils/response');
 const {validateRequiredFields, BadRequestError} = require('../utils/errorHandler');
@@ -21,15 +22,14 @@ const {SUCCESS_MESSAGES} = require('../config/constants');
  * CREAR PROCESO + CJ
  * Ambos se crean en una sola transacción
  */
+
 const create = async (req, res) => {
     const {adolescente_id, status_id, observaciones} = req.body;
 
     // Validar campos requeridos
     validateRequiredFields(req.body, ['adolescente_id']);
 
-    // Permitir enviar datos de CJ de dos formas:
-    // 1. Como objeto: { cj: { numero_cj, ... } }
-    // 2. Directamente: { numero_cj, fecha_ingreso, ... }
+    // Permitir enviar datos de CJ de dos formas
     const cjData = req.body.cj || req.body;
 
     // Validar que tenga numero_cj
@@ -37,12 +37,27 @@ const create = async (req, res) => {
         throw new BadRequestError('El campo numero_cj es obligatorio');
     }
 
-    // ===== FIX: Formatear fechas a YYYY-MM-DD =====
+    // ===== Función para formatear fechas =====
     const formatDate = (dateString) => {
         if (!dateString) return null;
         const date = new Date(dateString);
-        return date.toISOString().split('T')[0]; // "2026-02-02"
+        return date.toISOString().split('T')[0];
     };
+
+    // ===== CREAR DOMICILIO DE LOS HECHOS SI EXISTE =====
+    let domicilioHechosId = null;
+
+    if (cjData.domicilio_hechos_municipio || cjData.domicilio_hechos_calle || cjData.domicilio_hechos_colonia) {
+        const domicilioHechosData = {
+            municipio: cjData.domicilio_hechos_municipio,
+            calle_numero: cjData.domicilio_hechos_calle,
+            colonia: cjData.domicilio_hechos_colonia,
+            es_lugar_hechos: true
+        };
+
+        const domicilioHechos = await domicilioModel.create(domicilioHechosData);
+        domicilioHechosId = domicilioHechos.id_domicilio;
+    }
 
     // Crear proceso + CJ + proceso_carpeta en una transacción
     const result = await executeTransaction(async (connection) => {
@@ -55,7 +70,7 @@ const create = async (req, res) => {
 
         const procesoId = procesoResult.insertId;
 
-        // 2. Crear la CJ con fechas formateadas
+        // 2. Crear la CJ con fechas formateadas y domicilio
         const cjSql = `
             INSERT INTO cj (numero_cj, fecha_ingreso, tipo_fuero, numero_ampea,
                             tipo_narcotico_asegurado, peso_narcotico_gramos,
@@ -73,29 +88,29 @@ const create = async (req, res) => {
 
         const [cjResult] = await connection.execute(cjSql, [
             cjData.numero_cj,
-            formatDate(cjData.fecha_ingreso), // ← FORMATEADA
+            formatDate(cjData.fecha_ingreso),
             cjData.tipo_fuero || null,
             cjData.numero_ampea || null,
             cjData.tipo_narcotico_asegurado || null,
             cjData.peso_narcotico_gramos || null,
             cjData.control || false,
             cjData.lesiones || false,
-            formatDate(cjData.fecha_control), // ← FORMATEADA
-            formatDate(cjData.fecha_formulacion), // ← FORMATEADA
+            formatDate(cjData.fecha_control),
+            formatDate(cjData.fecha_formulacion),
             cjData.vinculacion || false,
-            formatDate(cjData.fecha_vinculacion), // ← FORMATEADA
+            formatDate(cjData.fecha_vinculacion),
             cjData.conducta_vinculacion || null,
-            cjData.declaro || null,
+            cjData.declaro || false,  // ← BOOLEAN
             cjData.suspension_condicional_proceso_prueba || false,
             cjData.plazo_suspension || null,
-            formatDate(cjData.fecha_suspension), // ← FORMATEADA
-            formatDate(cjData.fecha_terminacion_suspension), // ← FORMATEADA
+            formatDate(cjData.fecha_suspension),
+            formatDate(cjData.fecha_terminacion_suspension),
             cjData.audiencia_intermedia || false,
-            formatDate(cjData.fecha_audiencia_intermedia), // ← FORMATEADA
+            formatDate(cjData.fecha_audiencia_intermedia),
             cjData.estatus_carpeta_preliminar || null,
             cjData.reincidente || false,
             cjData.sustraido || false,
-            formatDate(cjData.fecha_sustraccion), // ← FORMATEADA
+            formatDate(cjData.fecha_sustraccion),
             cjData.medidas_proteccion || null,
             cjData.numero_toca_apelacion || null,
             cjData.numero_total_audiencias || 0,
@@ -104,7 +119,7 @@ const create = async (req, res) => {
             cjData.tipo_representacion_pp_nnya || null,
             cjData.observaciones || null,
             cjData.observaciones_adicionales || null,
-            cjData.domicilio_hechos_id || null
+            domicilioHechosId
         ]);
 
         const cjId = cjResult.insertId;

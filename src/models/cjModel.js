@@ -1,5 +1,5 @@
 // src/models/cjModel.js
-
+const {pool} = require('../config/database');
 const {executeQuery} = require('../config/database');
 const {NotFoundError, ConflictError, BadRequestError, validateDateSequence} = require('../utils/errorHandler');
 
@@ -132,44 +132,73 @@ const create = async (cjData) => {
 /**
  * OBTENER TODOS
  */
-const getAll = async (filters = {}) => {
-    const {search, tipo_fuero, vinculacion, reincidente} = filters;
 
-    let sql = `
-        SELECT c.*,
-               d.municipio    as domicilio_hechos_municipio,
-               d.calle_numero as domicilio_hechos_calle,
-               d.colonia      as domicilio_hechos_colonia
+const getAll = async (filters = {}) => {
+    const {page = 1, limit = 10, search, tipo_fuero, vinculacion, reincidente} = filters;
+    const offset = (page - 1) * limit;
+
+    let baseSql = `
         FROM cj c
-                 LEFT JOIN domicilio d ON c.domicilio_hechos_id = d.id_domicilio
-        WHERE 1 = 1
+        LEFT JOIN proceso_carpeta pc ON c.id_cj = pc.cj_id
+        LEFT JOIN proceso p ON pc.id_proceso = p.id_proceso
+        LEFT JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        WHERE 1=1
     `;
 
     const params = [];
 
+    // Filtros...
     if (search) {
-        sql += ` AND (c.numero_cj LIKE ? OR c.numero_ampea LIKE ?)`;
-        params.push(`%${search}%`, `%${search}%`);
+        baseSql += ` AND (c.numero_cj LIKE ? OR c.numero_ampea LIKE ? OR a.nombre LIKE ? OR a.iniciales LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
     if (tipo_fuero) {
-        sql += ` AND c.tipo_fuero = ?`;
+        baseSql += ` AND c.tipo_fuero = ?`;
         params.push(tipo_fuero);
     }
 
-    if (vinculacion !== undefined) {
-        sql += ` AND c.vinculacion = ?`;
-        params.push(vinculacion);
+    if (vinculacion !== undefined && vinculacion !== '') {
+        baseSql += ` AND c.vinculacion = ?`;
+        params.push(vinculacion === '1' || vinculacion === 1 || vinculacion === true);
     }
 
-    if (reincidente !== undefined) {
-        sql += ` AND c.reincidente = ?`;
-        params.push(reincidente);
+    if (reincidente !== undefined && reincidente !== '') {
+        baseSql += ` AND c.reincidente = ?`;
+        params.push(reincidente === '1' || reincidente === 1 || reincidente === true);
     }
 
-    sql += ` ORDER BY c.fecha_ingreso DESC, c.id_cj DESC`;
+    // Count
+    const countSql = `SELECT COUNT(*) as total ${baseSql}`;
+    const [countResult] = await executeQuery(countSql, params);
+    const total = countResult.total;
 
-    return await executeQuery(sql, params);
+    // Query principal - AGREGAR p.id_proceso como proceso_id
+    const dataSql = `
+        SELECT 
+            c.*,
+            a.nombre as adolescente_nombre,
+            a.iniciales as adolescente_iniciales,
+            pc.id_proceso,
+            p.id_proceso as proceso_id  -- ← AGREGAR ESTE ALIAS
+        ${baseSql}
+        ORDER BY c.fecha_ingreso DESC 
+        LIMIT ? OFFSET ?
+    `;
+
+    const dataParams = [...params, parseInt(limit), parseInt(offset)];
+    const [rows] = await pool.query(dataSql, dataParams);
+
+    return {
+        data: rows,
+        pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 };
 
 /**
@@ -231,15 +260,22 @@ const update = async (id, cjData) => {
     // Verificar que existe
     await getById(id);
 
-    // Si se actualiza numero_cj, verificar que no exista
+    // Si se actualiza numero_cj, verificar que no exista EN OTRO REGISTRO
     if (cjData.numero_cj) {
-        const existing = await getByNumero(cjData.numero_cj);
-        if (existing && existing.id_cj !== id) {
+        const checkSql = `
+            SELECT id_cj
+            FROM cj
+            WHERE numero_cj = ?
+              AND id_cj != ?
+        `;
+        const duplicados = await executeQuery(checkSql, [cjData.numero_cj, id]);
+
+        if (duplicados.length > 0) {
             throw new ConflictError(`El número de CJ "${cjData.numero_cj}" ya existe`);
         }
     }
 
-    // Construir UPDATE dinámicamente
+    // Resto del código igual...
     const updates = [];
     const values = [];
 

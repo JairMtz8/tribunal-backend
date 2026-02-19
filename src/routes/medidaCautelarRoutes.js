@@ -3,10 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const medidaCautelarController = require('../controllers/medidaCautelarController');
-const { asyncHandler } = require('../middlewares/errorMiddleware');
-const { authMiddleware } = require('../middlewares/auth');
-const { adminOnly } = require('../middlewares/checkRole');
-const { validateId, validateProcesoId } = require('../middlewares/validate');
+const {asyncHandler} = require('../middlewares/errorMiddleware');
+const {authMiddleware} = require('../middlewares/auth');
+const {adminOnly} = require('../middlewares/checkRole');
+const {validateId, validateProcesoId} = require('../middlewares/validate');
 
 /**
  * RUTAS DE MEDIDAS CAUTELARES
@@ -86,11 +86,11 @@ router.post(
     '/',
     authMiddleware,
     (req, res, next) => {
-        const { rol_nombre } = req.user;
+        const {rol_nombre} = req.user;
         const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
+            const {ForbiddenError} = require('../utils/errorHandler');
             return next(new ForbiddenError(
                 `No tienes permisos para crear medidas cautelares. ` +
                 `Roles permitidos: ${rolesPermitidos.join(', ')}`
@@ -111,11 +111,11 @@ router.put(
     '/:id',
     authMiddleware,
     (req, res, next) => {
-        const { rol_nombre } = req.user;
+        const {rol_nombre} = req.user;
         const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
+            const {ForbiddenError} = require('../utils/errorHandler');
             return next(new ForbiddenError(
                 `No tienes permisos para modificar medidas cautelares. ` +
                 `Roles permitidos: ${rolesPermitidos.join(', ')}`
@@ -138,11 +138,11 @@ router.put(
     '/:id/revocar',
     authMiddleware,
     (req, res, next) => {
-        const { rol_nombre } = req.user;
+        const {rol_nombre} = req.user;
         const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
-            const { ForbiddenError } = require('../utils/errorHandler');
+            const {ForbiddenError} = require('../utils/errorHandler');
             return next(new ForbiddenError(
                 `No tienes permisos para revocar medidas cautelares. ` +
                 `Roles permitidos: ${rolesPermitidos.join(', ')}`
@@ -167,5 +167,16 @@ router.delete(
     validateId,
     asyncHandler(medidaCautelarController.remove)
 );
+
+// ===== ELIMINAR ESTA RUTA =====
+// router.put('/:id/revocar', medidaCautelarController.revocar);
+
+// ===== SOLO DEJAR LAS RUTAS NORMALES =====
+/**
+ * @route   DELETE /api/medidas-cautelares/:id
+ * @desc    Eliminar medida cautelar
+ * @access  Private
+ */
+router.delete('/:id', medidaCautelarController.remove);
 
 module.exports = router;

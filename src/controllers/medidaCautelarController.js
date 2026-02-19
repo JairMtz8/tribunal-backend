@@ -9,6 +9,13 @@ const { SUCCESS_MESSAGES } = require('../config/constants');
  * CONTROLADOR DE MEDIDAS CAUTELARES
  */
 
+// Función helper para formatear fechas
+const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // "2026-02-19"
+};
+
 /**
  * CREAR MEDIDA CAUTELAR
  * Auto-crea CEMCI si el tipo lo requiere
@@ -20,7 +27,18 @@ const create = async (req, res) => {
         'fecha_medida_cautelar'
     ]);
 
-    const resultado = await medidaCautelarModel.create(req.body);
+    // Formatear fechas antes de crear
+    let medidaData = { ...req.body };
+
+    if (medidaData.fecha_medida_cautelar) {
+        medidaData.fecha_medida_cautelar = formatDate(medidaData.fecha_medida_cautelar);
+    }
+
+    if (medidaData.fecha_revocacion_medida) {
+        medidaData.fecha_revocacion_medida = formatDate(medidaData.fecha_revocacion_medida);
+    }
+
+    const resultado = await medidaCautelarModel.create(medidaData);
     const medida = await medidaCautelarModel.getById(resultado.medida_id);
 
     let mensaje = 'Medida cautelar creada exitosamente';
@@ -91,7 +109,18 @@ const getById = async (req, res) => {
 const update = async (req, res) => {
     const { id } = req.params;
 
-    const medida = await medidaCautelarModel.update(id, req.body);
+    // Formatear fechas antes de actualizar
+    let medidaData = { ...req.body };
+
+    if (medidaData.fecha_medida_cautelar) {
+        medidaData.fecha_medida_cautelar = formatDate(medidaData.fecha_medida_cautelar);
+    }
+
+    if (medidaData.fecha_revocacion_medida) {
+        medidaData.fecha_revocacion_medida = formatDate(medidaData.fecha_revocacion_medida);
+    }
+
+    const medida = await medidaCautelarModel.update(id, medidaData);
 
     return successResponse(
         res,
@@ -105,9 +134,14 @@ const update = async (req, res) => {
  */
 const revocar = async (req, res) => {
     const { id } = req.params;
-    const { fecha_revocacion } = req.body;
 
-    const medida = await medidaCautelarModel.revocar(id, fecha_revocacion);
+    let revocarData = { ...req.body };
+
+    if (revocarData.fecha_revocacion_medida) {
+        revocarData.fecha_revocacion_medida = formatDate(revocarData.fecha_revocacion_medida);
+    }
+
+    const medida = await medidaCautelarModel.revocar(id, revocarData);
 
     return successResponse(
         res,
@@ -127,7 +161,7 @@ const remove = async (req, res) => {
     return successResponse(
         res,
         medida,
-        SUCCESS_MESSAGES.DELETED
+        'Medida cautelar eliminada exitosamente'
     );
 };
 

@@ -1,7 +1,7 @@
 // src/models/procesoModel.js
 
-const { executeQuery, executeTransaction } = require('../config/database');
-const { NotFoundError, ConflictError, BadRequestError } = require('../utils/errorHandler');
+const {executeQuery, executeTransaction} = require('../config/database');
+const {NotFoundError, ConflictError, BadRequestError} = require('../utils/errorHandler');
 
 /**
  * MODELO DE PROCESO
@@ -15,10 +15,12 @@ const { NotFoundError, ConflictError, BadRequestError } = require('../utils/erro
  * Solo puede haber un proceso por adolescente
  */
 const create = async (procesoData) => {
-    const { adolescente_id, status_id, observaciones } = procesoData;
+    const {adolescente_id, status_id, observaciones} = procesoData;
 
     // Verificar que el adolescente existe
-    const adolescenteCheck = `SELECT id_adolescente FROM adolescente WHERE id_adolescente = ?`;
+    const adolescenteCheck = `SELECT id_adolescente
+                              FROM adolescente
+                              WHERE id_adolescente = ?`;
     const [adolescente] = await executeQuery(adolescenteCheck, [adolescente_id]);
 
     if (!adolescente) {
@@ -26,7 +28,9 @@ const create = async (procesoData) => {
     }
 
     // Verificar que el adolescente NO tenga ya un proceso
-    const procesoCheck = `SELECT id_proceso FROM proceso WHERE adolescente_id = ?`;
+    const procesoCheck = `SELECT id_proceso
+                          FROM proceso
+                          WHERE adolescente_id = ?`;
     const [procesoExistente] = await executeQuery(procesoCheck, [adolescente_id]);
 
     if (procesoExistente) {
@@ -38,9 +42,9 @@ const create = async (procesoData) => {
 
     // Crear el proceso
     const sql = `
-    INSERT INTO proceso (adolescente_id, status_id, observaciones)
-    VALUES (?, ?, ?)
-  `;
+        INSERT INTO proceso (adolescente_id, status_id, observaciones)
+        VALUES (?, ?, ?)
+    `;
 
     const result = await executeQuery(sql, [
         adolescente_id,
@@ -55,22 +59,21 @@ const create = async (procesoData) => {
  * OBTENER TODOS (con información de adolescente Y número de CJ)
  */
 const getAll = async (filters = {}) => {
-    const { status_id, search, limit, offset } = filters;
+    const {status_id, search, limit, offset} = filters;
 
     let sql = `
-        SELECT
-            p.*,
-            a.nombre as adolescente_nombre,
-            a.iniciales as adolescente_iniciales,
-            a.fecha_nacimiento as adolescente_fecha_nacimiento,
-            s.nombre as status_nombre,
-            cj.numero_cj as cj_numero
+        SELECT p.*,
+               a.nombre           as adolescente_nombre,
+               a.iniciales        as adolescente_iniciales,
+               a.fecha_nacimiento as adolescente_fecha_nacimiento,
+               s.nombre           as status_nombre,
+               cj.numero_cj       as cj_numero
         FROM proceso p
                  INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
                  LEFT JOIN status s ON p.status_id = s.id_status
                  LEFT JOIN proceso_carpeta pc ON p.id_proceso = pc.id_proceso
                  LEFT JOIN cj ON pc.cj_id = cj.id_cj
-        WHERE 1=1
+        WHERE 1 = 1
     `;
 
     const params = [];
@@ -104,25 +107,44 @@ const getAll = async (filters = {}) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      p.*,
-      a.id_adolescente,
-      a.nombre as adolescente_nombre,
-      a.iniciales as adolescente_iniciales,
-      a.sexo as adolescente_sexo,
-      a.fecha_nacimiento as adolescente_fecha_nacimiento,
-      s.nombre as status_nombre
-    FROM proceso p
-    INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
-    LEFT JOIN status s ON p.status_id = s.id_status
-    WHERE p.id_proceso = ?
-  `;
+        SELECT p.*,
+               a.nombre           as adolescente_nombre,
+               a.iniciales        as adolescente_iniciales,
+               a.fecha_nacimiento as adolescente_fecha_nacimiento,
+               a.sexo             as adolescente_sexo,
+               a.nacionalidad     as adolescente_nacionalidad,
+               a.escolaridad      as adolescente_escolaridad,
+               s.nombre           as status_nombre
+        FROM proceso p
+                 LEFT JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+                 LEFT JOIN status s ON p.status_id = s.id_status
+        WHERE p.id_proceso = ?
+    `;
 
     const [proceso] = await executeQuery(sql, [id]);
 
     if (!proceso) {
         throw new NotFoundError('Proceso no encontrado');
     }
+
+    // Estructurar adolescente como objeto separado
+    proceso.adolescente = {
+        id_adolescente: proceso.adolescente_id,
+        nombre: proceso.adolescente_nombre,
+        iniciales: proceso.adolescente_iniciales,
+        fecha_nacimiento: proceso.adolescente_fecha_nacimiento,
+        sexo: proceso.adolescente_sexo,
+        nacionalidad: proceso.adolescente_nacionalidad,
+        escolaridad: proceso.adolescente_escolaridad
+    };
+
+    // Limpiar campos duplicados
+    delete proceso.adolescente_nombre;
+    delete proceso.adolescente_iniciales;
+    delete proceso.adolescente_fecha_nacimiento;
+    delete proceso.adolescente_sexo;
+    delete proceso.adolescente_nacionalidad;
+    delete proceso.adolescente_escolaridad;
 
     return proceso;
 };
@@ -132,13 +154,12 @@ const getById = async (id) => {
  */
 const getByAdolescenteId = async (adolescenteId) => {
     const sql = `
-    SELECT 
-      p.*,
-      s.nombre as status_nombre
-    FROM proceso p
-    LEFT JOIN status s ON p.status_id = s.id_status
-    WHERE p.adolescente_id = ?
-  `;
+        SELECT p.*,
+               s.nombre as status_nombre
+        FROM proceso p
+                 LEFT JOIN status s ON p.status_id = s.id_status
+        WHERE p.adolescente_id = ?
+    `;
 
     const [proceso] = await executeQuery(sql, [adolescenteId]);
     return proceso || null;
@@ -171,10 +192,10 @@ const update = async (id, procesoData) => {
     values.push(id);
 
     const sql = `
-    UPDATE proceso 
-    SET ${updates.join(', ')}
-    WHERE id_proceso = ?
-  `;
+        UPDATE proceso
+        SET ${updates.join(', ')}
+        WHERE id_proceso = ?
+    `;
 
     await executeQuery(sql, values);
     return await getById(id);
@@ -188,7 +209,9 @@ const remove = async (id) => {
     const proceso = await getById(id);
 
     // Verificar si tiene carpetas en proceso_carpeta
-    const carpetaCheck = `SELECT * FROM proceso_carpeta WHERE id_proceso = ?`;
+    const carpetaCheck = `SELECT *
+                          FROM proceso_carpeta
+                          WHERE id_proceso = ?`;
     const [carpeta] = await executeQuery(carpetaCheck, [id]);
 
     if (carpeta) {
@@ -198,7 +221,9 @@ const remove = async (id) => {
         );
     }
 
-    const sql = `DELETE FROM proceso WHERE id_proceso = ?`;
+    const sql = `DELETE
+                 FROM proceso
+                 WHERE id_proceso = ?`;
     await executeQuery(sql, [id]);
 
     return proceso;
@@ -208,7 +233,9 @@ const remove = async (id) => {
  * VERIFICAR SI TIENE CARPETAS
  */
 const tieneCarpetas = async (id) => {
-    const sql = `SELECT COUNT(*) as count FROM proceso_carpeta WHERE id_proceso = ?`;
+    const sql = `SELECT COUNT(*) as count
+                 FROM proceso_carpeta
+                 WHERE id_proceso = ?`;
     const [result] = await executeQuery(sql, [id]);
     return result.count > 0;
 };
@@ -217,9 +244,11 @@ const tieneCarpetas = async (id) => {
  * CONTAR TOTAL DE PROCESOS
  */
 const getCount = async (filters = {}) => {
-    const { status_id } = filters;
+    const {status_id} = filters;
 
-    let sql = `SELECT COUNT(*) as total FROM proceso WHERE 1=1`;
+    let sql = `SELECT COUNT(*) as total
+               FROM proceso
+               WHERE 1 = 1`;
     const params = [];
 
     if (status_id) {
