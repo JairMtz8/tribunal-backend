@@ -51,7 +51,14 @@ router.get(
     '/cj/:cj_id',
     authMiddleware,
     canConsultar('CJO'),
-    validateId,
+    (req, res, next) => {
+        const { cj_id } = req.params;
+        if (!cj_id || isNaN(cj_id) || parseInt(cj_id) <= 0) {
+            const { BadRequestError } = require('../utils/errorHandler');
+            return next(new BadRequestError('El CJ_ID debe ser un número entero positivo'));
+        }
+        next();
+    },
     asyncHandler(cjoController.getByCjId)
 );
 

@@ -133,6 +133,9 @@ const create = async (cjData) => {
  * OBTENER TODOS
  */
 
+// src/models/cjModel.js
+// ACTUALIZAR EL MÉTODO getAll:
+
 const getAll = async (filters = {}) => {
     const {page = 1, limit = 10, search, tipo_fuero, vinculacion, reincidente} = filters;
     const offset = (page - 1) * limit;
@@ -142,6 +145,7 @@ const getAll = async (filters = {}) => {
         LEFT JOIN proceso_carpeta pc ON c.id_cj = pc.cj_id
         LEFT JOIN proceso p ON pc.id_proceso = p.id_proceso
         LEFT JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        LEFT JOIN cjo ON c.id_cj = cjo.cj_id
         WHERE 1=1
     `;
 
@@ -174,14 +178,16 @@ const getAll = async (filters = {}) => {
     const [countResult] = await executeQuery(countSql, params);
     const total = countResult.total;
 
-    // Query principal - AGREGAR p.id_proceso como proceso_id
+    // Query principal - Incluir datos de CJO
     const dataSql = `
         SELECT 
             c.*,
             a.nombre as adolescente_nombre,
             a.iniciales as adolescente_iniciales,
             pc.id_proceso,
-            p.id_proceso as proceso_id  -- ← AGREGAR ESTE ALIAS
+            p.id_proceso as proceso_id,
+            cjo.id_cjo,
+            cjo.numero_cjo
         ${baseSql}
         ORDER BY c.fecha_ingreso DESC 
         LIMIT ? OFFSET ?

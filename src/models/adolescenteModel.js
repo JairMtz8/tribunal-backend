@@ -1,7 +1,7 @@
 // src/models/adolescenteModel.js
 
-const { executeQuery, executeTransaction } = require('../config/database');
-const { NotFoundError, ConflictError, BadRequestError } = require('../utils/errorHandler');
+const {executeQuery, executeTransaction} = require('../config/database');
+const {NotFoundError, ConflictError, BadRequestError} = require('../utils/errorHandler');
 const domicilioModel = require('./domicilioModel');
 
 /**
@@ -66,9 +66,9 @@ const create = async (adolescenteData) => {
         // Crear domicilio si se proporcionó como objeto (opcional)
         if (adolescenteData.domicilio) {
             const domicilioSql = `
-        INSERT INTO domicilio (municipio, calle_numero, colonia, es_lugar_hechos)
-        VALUES (?, ?, ?, FALSE)
-      `;
+                INSERT INTO domicilio (municipio, calle_numero, colonia, es_lugar_hechos)
+                VALUES (?, ?, ?, FALSE)
+            `;
 
             const [domicilioResult] = await connection.execute(domicilioSql, [
                 adolescenteData.domicilio.municipio || null,
@@ -81,14 +81,13 @@ const create = async (adolescenteData) => {
 
         // Crear adolescente
         const sql = `
-      INSERT INTO adolescente (
-        nombre, iniciales, sexo, fecha_nacimiento, nacionalidad, idioma,
-        otro_idioma_lengua, escolaridad, ocupacion, estado_civil,
-        lugar_nacimiento_municipio, lugar_nacimiento_estado,
-        fuma_cigarro, consume_alcohol, consume_drogas, tipo_droga,
-        telefono, correo, domicilio_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+            INSERT INTO adolescente (nombre, iniciales, sexo, fecha_nacimiento, nacionalidad, idioma,
+                                     otro_idioma_lengua, escolaridad, ocupacion, estado_civil,
+                                     lugar_nacimiento_municipio, lugar_nacimiento_estado,
+                                     fuma_cigarro, consume_alcohol, consume_drogas, tipo_droga,
+                                     telefono, correo, domicilio_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
         const [result] = await connection.execute(sql, [
             adolescenteData.nombre,
@@ -120,17 +119,16 @@ const create = async (adolescenteData) => {
  * OBTENER TODOS (con paginación y filtros)
  */
 const getAll = async (options = {}) => {
-    const { search, sexo, edad_min, edad_max, limit, offset } = options;
+    const {search, sexo, edad_min, edad_max, limit, offset} = options;
 
     let sql = `
-        SELECT
-            a.*,
-            d.municipio as domicilio_municipio,
-            d.calle_numero as domicilio_calle,
-            d.colonia as domicilio_colonia
+        SELECT a.*,
+               d.municipio    as domicilio_municipio,
+               d.calle_numero as domicilio_calle,
+               d.colonia      as domicilio_colonia
         FROM adolescente a
                  LEFT JOIN domicilio d ON a.domicilio_id = d.id_domicilio
-        WHERE 1=1
+        WHERE 1 = 1
     `;
 
     const params = [];
@@ -186,9 +184,11 @@ const getAll = async (options = {}) => {
  * CONTAR TOTAL (para paginación)
  */
 const getCount = async (filters = {}) => {
-    const { search, sexo, edad_min, edad_max } = filters;
+    const {search, sexo, edad_min, edad_max} = filters;
 
-    let sql = `SELECT COUNT(*) as total FROM adolescente WHERE 1=1`;
+    let sql = `SELECT COUNT(*) as total
+               FROM adolescente
+               WHERE 1 = 1`;
     const params = [];
 
     if (search) {
@@ -224,16 +224,15 @@ const getCount = async (filters = {}) => {
  */
 const getById = async (id) => {
     const sql = `
-    SELECT 
-      a.*,
-      d.id_domicilio,
-      d.municipio as domicilio_municipio,
-      d.calle_numero as domicilio_calle,
-      d.colonia as domicilio_colonia
-    FROM adolescente a
-    LEFT JOIN domicilio d ON a.domicilio_id = d.id_domicilio
-    WHERE a.id_adolescente = ?
-  `;
+        SELECT a.*,
+               d.id_domicilio,
+               d.municipio    as domicilio_municipio,
+               d.calle_numero as domicilio_calle,
+               d.colonia      as domicilio_colonia
+        FROM adolescente a
+                 LEFT JOIN domicilio d ON a.domicilio_id = d.id_domicilio
+        WHERE a.id_adolescente = ?
+    `;
 
     const [adolescente] = await executeQuery(sql, [id]);
 
@@ -281,10 +280,12 @@ const update = async (id, adolescenteData) => {
             if (adolescenteActual.domicilio_id) {
                 // Actualizar domicilio existente
                 const domicilioSql = `
-          UPDATE domicilio 
-          SET municipio = ?, calle_numero = ?, colonia = ?
-          WHERE id_domicilio = ?
-        `;
+                    UPDATE domicilio
+                    SET municipio    = ?,
+                        calle_numero = ?,
+                        colonia      = ?
+                    WHERE id_domicilio = ?
+                `;
 
                 await connection.execute(domicilioSql, [
                     adolescenteData.domicilio.municipio || null,
@@ -295,9 +296,9 @@ const update = async (id, adolescenteData) => {
             } else {
                 // Crear nuevo domicilio
                 const domicilioSql = `
-          INSERT INTO domicilio (municipio, calle_numero, colonia, es_lugar_hechos)
-          VALUES (?, ?, ?, FALSE)
-        `;
+                    INSERT INTO domicilio (municipio, calle_numero, colonia, es_lugar_hechos)
+                    VALUES (?, ?, ?, FALSE)
+                `;
 
                 const [domicilioResult] = await connection.execute(domicilioSql, [
                     adolescenteData.domicilio.municipio || null,
@@ -335,10 +336,10 @@ const update = async (id, adolescenteData) => {
         values.push(id);
 
         const sql = `
-      UPDATE adolescente 
-      SET ${updates.join(', ')}
-      WHERE id_adolescente = ?
-    `;
+            UPDATE adolescente
+            SET ${updates.join(', ')}
+            WHERE id_adolescente = ?
+        `;
 
         await connection.execute(sql, values);
 
@@ -355,10 +356,10 @@ const remove = async (id) => {
 
     // Verificar que no tenga proceso
     const procesoCheck = `
-    SELECT id_proceso 
-    FROM proceso 
-    WHERE adolescente_id = ?
-  `;
+        SELECT id_proceso
+        FROM proceso
+        WHERE adolescente_id = ?
+    `;
 
     const [proceso] = await executeQuery(procesoCheck, [id]);
 
@@ -371,12 +372,16 @@ const remove = async (id) => {
 
     return await executeTransaction(async (connection) => {
         // Eliminar adolescente
-        const sql = `DELETE FROM adolescente WHERE id_adolescente = ?`;
+        const sql = `DELETE
+                     FROM adolescente
+                     WHERE id_adolescente = ?`;
         await connection.execute(sql, [id]);
 
         // Eliminar domicilio si existe y no está en uso
         if (adolescente.domicilio_id) {
-            const domicilioSql = `DELETE FROM domicilio WHERE id_domicilio = ?`;
+            const domicilioSql = `DELETE
+                                  FROM domicilio
+                                  WHERE id_domicilio = ?`;
             await connection.execute(domicilioSql, [adolescente.domicilio_id]);
         }
 
@@ -389,13 +394,24 @@ const remove = async (id) => {
  */
 const tieneProceso = async (id) => {
     const sql = `
-    SELECT COUNT(*) as count 
-    FROM proceso 
-    WHERE adolescente_id = ?
-  `;
+        SELECT COUNT(*) as count
+        FROM proceso
+        WHERE adolescente_id = ?
+    `;
 
     const [result] = await executeQuery(sql, [id]);
     return result.count > 0;
+};
+
+const getSinProceso = async () => {
+    const sql = `
+        SELECT a.*
+        FROM adolescente a
+                 LEFT JOIN proceso p ON a.id_adolescente = p.adolescente_id
+        WHERE p.id_proceso IS NULL
+        ORDER BY a.nombre ASC
+    `;
+    return await executeQuery(sql);
 };
 
 module.exports = {
@@ -407,5 +423,6 @@ module.exports = {
     remove,
     tieneProceso,
     calcularEdad,
-    validarEdadAdolescente
+    validarEdadAdolescente,
+    getSinProceso
 };

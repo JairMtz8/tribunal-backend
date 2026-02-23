@@ -1,9 +1,9 @@
 // src/controllers/adolescenteController.js
 
 const adolescenteModel = require('../models/adolescenteModel');
-const { successResponse, createdResponse, paginatedResponse, getPaginationParams } = require('../utils/response');
-const { validateRequiredFields } = require('../utils/errorHandler');
-const { SUCCESS_MESSAGES } = require('../config/constants');
+const {successResponse, createdResponse, paginatedResponse, getPaginationParams} = require('../utils/response');
+const {validateRequiredFields} = require('../utils/errorHandler');
+const {SUCCESS_MESSAGES} = require('../config/constants');
 
 /**
  * CONTROLADOR DE ADOLESCENTES
@@ -13,7 +13,7 @@ const { SUCCESS_MESSAGES } = require('../config/constants');
  * OBTENER TODOS (con filtros y paginación)
  */
 const getAll = async (req, res) => {
-    const { search, sexo, edad_min, edad_max } = req.query;
+    const {search, sexo, edad_min, edad_max} = req.query;
 
     const usePagination = req.query.page || req.query.limit;
 
@@ -25,10 +25,10 @@ const getAll = async (req, res) => {
     };
 
     if (usePagination) {
-        const { page, limit, offset } = getPaginationParams(req.query.page, req.query.limit);
+        const {page, limit, offset} = getPaginationParams(req.query.page, req.query.limit);
 
         const [adolescentes, total] = await Promise.all([
-            adolescenteModel.getAll({ ...filters, limit, offset }),
+            adolescenteModel.getAll({...filters, limit, offset}),
             adolescenteModel.getCount(filters)
         ]);
 
@@ -55,7 +55,7 @@ const getAll = async (req, res) => {
  * OBTENER POR ID
  */
 const getById = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const adolescente = await adolescenteModel.getById(id);
 
@@ -91,7 +91,7 @@ const create = async (req, res) => {
  * ACTUALIZAR ADOLESCENTE
  */
 const update = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
     const data = req.body;
 
     await adolescenteModel.update(id, data);
@@ -110,7 +110,7 @@ const update = async (req, res) => {
  * ELIMINAR ADOLESCENTE
  */
 const remove = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const adolescente = await adolescenteModel.remove(id);
 
@@ -125,7 +125,7 @@ const remove = async (req, res) => {
  * VERIFICAR SI TIENE PROCESO
  */
 const checkProceso = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     // Verificar que existe
     await adolescenteModel.getById(id);
@@ -134,7 +134,7 @@ const checkProceso = async (req, res) => {
 
     return successResponse(
         res,
-        { tiene_proceso: tieneProceso },
+        {tiene_proceso: tieneProceso},
         'Verificación completada'
     );
 };
@@ -147,15 +147,15 @@ const getStats = async (req, res) => {
 
     // Contar por sexo
     const porSexo = await Promise.all([
-        adolescenteModel.getCount({ sexo: 'Hombre' }),
-        adolescenteModel.getCount({ sexo: 'Mujer' })
+        adolescenteModel.getCount({sexo: 'Hombre'}),
+        adolescenteModel.getCount({sexo: 'Mujer'})
     ]);
 
     // Contar por rango de edad
     const porEdad = await Promise.all([
-        adolescenteModel.getCount({ edad_min: 12, edad_max: 13 }),
-        adolescenteModel.getCount({ edad_min: 14, edad_max: 15 }),
-        adolescenteModel.getCount({ edad_min: 16, edad_max: 17 })
+        adolescenteModel.getCount({edad_min: 12, edad_max: 13}),
+        adolescenteModel.getCount({edad_min: 14, edad_max: 15}),
+        adolescenteModel.getCount({edad_min: 16, edad_max: 17})
     ]);
 
     const stats = {
@@ -178,6 +178,19 @@ const getStats = async (req, res) => {
     );
 };
 
+/**
+ * OBTENER ADOLESCENTES SIN PROCESO ACTIVO
+ */
+const getSinProceso = async (req, res) => {
+    const adolescentes = await adolescenteModel.getSinProceso();
+
+    return successResponse(
+        res,
+        adolescentes,
+        'Adolescentes sin proceso obtenidos exitosamente'
+    );
+};
+
 module.exports = {
     getAll,
     getById,
@@ -185,5 +198,6 @@ module.exports = {
     update,
     remove,
     checkProceso,
-    getStats
+    getStats,
+    getSinProceso
 };
