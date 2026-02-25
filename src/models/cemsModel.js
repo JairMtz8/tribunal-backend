@@ -136,12 +136,14 @@ const getById = async (id) => {
             cj.numero_cj,
             cjo.numero_cjo,
             cemci.numero_cemci,
-            ep.nombre as estado_procesal_nombre
+            ep.nombre as estado_procesal_nombre,
+            pc.id_proceso as proceso_id  -- ← AGREGAR ESTA LÍNEA
         FROM cems cs
                  INNER JOIN cj ON cs.cj_id = cj.id_cj
                  INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
                  LEFT JOIN cemci ON cs.cemci_id = cemci.id_cemci
                  LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+                 LEFT JOIN proceso_carpeta pc ON cs.id_cems = pc.cems_id
         WHERE cs.id_cems = ?
     `;
 

@@ -132,7 +132,7 @@ const create = async (cjoData) => {
  * OBTENER TODAS LAS CJO
  */
 const getAll = async (filters = {}) => {
-    const { fuero, sentencia } = filters;
+    const { fuero, sentencia, search } = filters;  // ✅ Debe incluir search
 
     let sql = `
         SELECT cjo.*, cj.numero_cj
@@ -141,6 +141,12 @@ const getAll = async (filters = {}) => {
         WHERE 1=1
     `;
     const params = [];
+
+    if (search) {
+        sql += ` AND (cjo.numero_cjo LIKE ? OR cj.numero_cj LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern);
+    }
 
     if (fuero) {
         sql += ` AND cjo.fuero = ?`;

@@ -16,7 +16,7 @@ const {SUCCESS_MESSAGES} = require('../config/constants');
  * OBTENER TODAS LAS CJ
  */
 const getAll = async (req, res) => {
-    const {search, tipo_fuero, vinculacion, reincidente} = req.query;
+    const {search, tipo_fuero, vinculacion, reincidente, tiene_medidas} = req.query;  // ✅ Ya lo extrae
 
     const usePagination = req.query.page || req.query.limit;
 
@@ -24,7 +24,8 @@ const getAll = async (req, res) => {
         search,
         tipo_fuero,
         vinculacion: vinculacion !== undefined ? vinculacion === 'true' : undefined,
-        reincidente: reincidente !== undefined ? reincidente === 'true' : undefined
+        reincidente: reincidente !== undefined ? reincidente === 'true' : undefined,
+        tiene_medidas  // ← AGREGAR ESTA LÍNEA
     };
 
     if (usePagination) {

@@ -2,13 +2,20 @@
 
 const cemciModel = require('../models/cemciModel');
 const cemciSeguimientoModel = require('../models/cemciSeguimientoModel');
-const { successResponse, createdResponse } = require('../utils/response');
-const { validateRequiredFields } = require('../utils/errorHandler');
-const { SUCCESS_MESSAGES } = require('../config/constants');
+const {successResponse, createdResponse} = require('../utils/response');
+const {validateRequiredFields} = require('../utils/errorHandler');
+const {SUCCESS_MESSAGES} = require('../config/constants');
 
 /**
  * CONTROLADOR DE CEMCI
  */
+
+const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD
+};
+
 
 /**
  * CREAR CEMCI (manual - normalmente se auto-crea)
@@ -30,11 +37,12 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const { estado_procesal_id, concluido } = req.query;
+    const {estado_procesal_id, concluido, search} = req.query;
 
     const cemcis = await cemciModel.getAll({
         estado_procesal_id,
-        concluido
+        concluido,
+        search
     });
 
     return successResponse(
@@ -48,18 +56,17 @@ const getAll = async (req, res) => {
  * OBTENER POR ID
  */
 const getById = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const cemci = await cemciModel.getById(id);
 
-    // Obtener seguimientos asociados
     const seguimientos = await cemciSeguimientoModel.getByCemciId(id);
 
     return successResponse(
         res,
         {
             ...cemci,
-            seguimientos
+            seguimientos  // ← Siempre incluir seguimientos
         },
         'CEMCI obtenida exitosamente'
     );
@@ -69,12 +76,12 @@ const getById = async (req, res) => {
  * OBTENER POR CJ_ID
  */
 const getByCjId = async (req, res) => {
-    const { cj_id } = req.params;
+    const {cj_id} = req.params;
 
     const cemci = await cemciModel.getByCjId(cj_id);
 
     if (!cemci) {
-        const { NotFoundError } = require('../utils/errorHandler');
+        const {NotFoundError} = require('../utils/errorHandler');
         throw new NotFoundError('No existe CEMCI para esta CJ');
     }
 
@@ -95,9 +102,15 @@ const getByCjId = async (req, res) => {
  * ACTUALIZAR
  */
 const update = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
-    const cemci = await cemciModel.update(id, req.body);
+    let cemciData = {...req.body};
+
+    if (cemciData.fecha_recepcion_cemci) {
+        cemciData.fecha_recepcion_cemci = formatDate(cemciData.fecha_recepcion_cemci);
+    }
+
+    const cemci = await cemciModel.update(id, cemciData);
 
     return successResponse(
         res,
@@ -110,7 +123,7 @@ const update = async (req, res) => {
  * ELIMINAR
  */
 const remove = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const cemci = await cemciModel.remove(id);
 
@@ -142,9 +155,34 @@ const getStats = async (req, res) => {
  * CREAR SEGUIMIENTO
  */
 const createSeguimiento = async (req, res) => {
-    validateRequiredFields(req.body, ['cemci_id', 'proceso_id']);
+    validateRequiredFields(req.body, ['cemci_id']);
 
-    const id = await cemciSeguimientoModel.create(req.body);
+    let seguimientoData = {...req.body};
+
+    // Si no viene proceso_id, obtenerlo del CEMCI
+    if (!seguimientoData.proceso_id) {
+        const cemci = await cemciModel.getById(seguimientoData.cemci_id);
+        seguimientoData.proceso_id = cemci.proceso_id;
+    }
+
+    // Formatear fechas
+    if (seguimientoData.fecha_radicacion) {
+        seguimientoData.fecha_radicacion = formatDate(seguimientoData.fecha_radicacion);
+    }
+    if (seguimientoData.fecha_recepcion_plan_actividades) {
+        seguimientoData.fecha_recepcion_plan_actividades = formatDate(seguimientoData.fecha_recepcion_plan_actividades);
+    }
+    if (seguimientoData.fecha_audiencia_inicial_cemci) {
+        seguimientoData.fecha_audiencia_inicial_cemci = formatDate(seguimientoData.fecha_audiencia_inicial_cemci);
+    }
+    if (seguimientoData.fecha_aprobacion_plan_actividades) {
+        seguimientoData.fecha_aprobacion_plan_actividades = formatDate(seguimientoData.fecha_aprobacion_plan_actividades);
+    }
+    if (seguimientoData.fecha_suspension) {
+        seguimientoData.fecha_suspension = formatDate(seguimientoData.fecha_suspension);
+    }
+
+    const id = await cemciSeguimientoModel.create(seguimientoData);
     const seguimiento = await cemciSeguimientoModel.getById(id);
 
     return createdResponse(
@@ -158,7 +196,7 @@ const createSeguimiento = async (req, res) => {
  * OBTENER SEGUIMIENTOS DE CEMCI
  */
 const getSeguimientosByCemci = async (req, res) => {
-    const { cemci_id } = req.params;
+    const {cemci_id} = req.params;
 
     const seguimientos = await cemciSeguimientoModel.getByCemciId(cemci_id);
 
@@ -173,12 +211,12 @@ const getSeguimientosByCemci = async (req, res) => {
  * OBTENER SEGUIMIENTO POR PROCESO
  */
 const getSeguimientoByProceso = async (req, res) => {
-    const { proceso_id } = req.params;
+    const {proceso_id} = req.params;
 
     const seguimiento = await cemciSeguimientoModel.getByProcesoId(proceso_id);
 
     if (!seguimiento) {
-        const { NotFoundError } = require('../utils/errorHandler');
+        const {NotFoundError} = require('../utils/errorHandler');
         throw new NotFoundError('No existe seguimiento de CEMCI para este proceso');
     }
 
@@ -193,9 +231,28 @@ const getSeguimientoByProceso = async (req, res) => {
  * ACTUALIZAR SEGUIMIENTO
  */
 const updateSeguimiento = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
-    const seguimiento = await cemciSeguimientoModel.update(id, req.body);
+    // Formatear fechas
+    let seguimientoData = {...req.body};
+
+    if (seguimientoData.fecha_radicacion) {
+        seguimientoData.fecha_radicacion = formatDate(seguimientoData.fecha_radicacion);
+    }
+    if (seguimientoData.fecha_recepcion_plan_actividades) {
+        seguimientoData.fecha_recepcion_plan_actividades = formatDate(seguimientoData.fecha_recepcion_plan_actividades);
+    }
+    if (seguimientoData.fecha_audiencia_inicial_cemci) {
+        seguimientoData.fecha_audiencia_inicial_cemci = formatDate(seguimientoData.fecha_audiencia_inicial_cemci);
+    }
+    if (seguimientoData.fecha_aprobacion_plan_actividades) {
+        seguimientoData.fecha_aprobacion_plan_actividades = formatDate(seguimientoData.fecha_aprobacion_plan_actividades);
+    }
+    if (seguimientoData.fecha_suspension) {
+        seguimientoData.fecha_suspension = formatDate(seguimientoData.fecha_suspension);
+    }
+
+    const seguimiento = await cemciSeguimientoModel.update(id, seguimientoData);
 
     return successResponse(
         res,
@@ -208,7 +265,7 @@ const updateSeguimiento = async (req, res) => {
  * ELIMINAR SEGUIMIENTO
  */
 const removeSeguimiento = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const seguimiento = await cemciSeguimientoModel.remove(id);
 
@@ -249,8 +306,8 @@ const getStatsSeguimiento = async (req, res) => {
  * ACTUALIZAR NÚMERO DE CEMCI
  */
 const updateNumero = async (req, res) => {
-    const { id } = req.params;
-    const { numero_cemci } = req.body;
+    const {id} = req.params;
+    const {numero_cemci} = req.body;
 
     validateRequiredFields(req.body, ['numero_cemci']);
 

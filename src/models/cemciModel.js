@@ -67,7 +67,7 @@ const create = async (cemciData) => {
  * OBTENER TODAS LAS CEMCI
  */
 const getAll = async (filters = {}) => {
-    const { estado_procesal_id, concluido } = filters;
+    const { estado_procesal_id, concluido, search } = filters;
 
     let sql = `
         SELECT
@@ -82,6 +82,12 @@ const getAll = async (filters = {}) => {
         WHERE 1=1
     `;
     const params = [];
+
+    if (search) {
+        sql += ` AND (c.numero_cemci LIKE ? OR cj.numero_cj LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern);
+    }
 
     if (estado_procesal_id) {
         sql += ` AND c.estado_procesal_id = ?`;
@@ -107,11 +113,13 @@ const getById = async (id) => {
             c.*,
             cj.numero_cj,
             cjo.numero_cjo,
-            ep.nombre as estado_procesal_nombre
+            ep.nombre as estado_procesal_nombre,
+            pc.id_proceso as proceso_id
         FROM cemci c
                  INNER JOIN cj ON c.cj_id = cj.id_cj
                  LEFT JOIN cjo ON c.cjo_id = cjo.id_cjo
                  LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
+                 LEFT JOIN proceso_carpeta pc ON c.id_cemci = pc.cemci_id
         WHERE c.id_cemci = ?
     `;
 

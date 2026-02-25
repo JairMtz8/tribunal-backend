@@ -132,12 +132,8 @@ const create = async (cjData) => {
 /**
  * OBTENER TODOS
  */
-
-// src/models/cjModel.js
-// ACTUALIZAR EL MÉTODO getAll:
-
 const getAll = async (filters = {}) => {
-    const {page = 1, limit = 10, search, tipo_fuero, vinculacion, reincidente} = filters;
+    const {page = 1, limit = 10, search, tipo_fuero, vinculacion, reincidente, tiene_medidas} = filters;
     const offset = (page - 1) * limit;
 
     let baseSql = `
@@ -151,7 +147,7 @@ const getAll = async (filters = {}) => {
 
     const params = [];
 
-    // Filtros...
+    // Filtros existentes...
     if (search) {
         baseSql += ` AND (c.numero_cj LIKE ? OR c.numero_ampea LIKE ? OR a.nombre LIKE ? OR a.iniciales LIKE ?)`;
         const searchPattern = `%${search}%`;
@@ -173,12 +169,29 @@ const getAll = async (filters = {}) => {
         params.push(reincidente === '1' || reincidente === 1 || reincidente === true);
     }
 
+    // ✅ NUEVO FILTRO: Tiene medidas cautelares
+    if (tiene_medidas !== undefined && tiene_medidas !== '') {
+        if (tiene_medidas === '1' || tiene_medidas === 1 || tiene_medidas === true) {
+            // Con medidas cautelares
+            baseSql += ` AND EXISTS (
+                SELECT 1 FROM medida_cautelar mc 
+                WHERE mc.proceso_id = p.id_proceso
+            )`;
+        } else {
+            // Sin medidas cautelares
+            baseSql += ` AND NOT EXISTS (
+                SELECT 1 FROM medida_cautelar mc 
+                WHERE mc.proceso_id = p.id_proceso
+            )`;
+        }
+    }
+
     // Count
     const countSql = `SELECT COUNT(*) as total ${baseSql}`;
     const [countResult] = await executeQuery(countSql, params);
     const total = countResult.total;
 
-    // Query principal - Incluir datos de CJO
+    // Query principal - Incluir datos de CJO Y contador de medidas cautelares
     const dataSql = `
         SELECT 
             c.*,
@@ -187,7 +200,14 @@ const getAll = async (filters = {}) => {
             pc.id_proceso,
             p.id_proceso as proceso_id,
             cjo.id_cjo,
-            cjo.numero_cjo
+            cjo.numero_cjo,
+            (SELECT COUNT(*) 
+             FROM medida_cautelar mc 
+             WHERE mc.proceso_id = p.id_proceso) as total_medidas_cautelares,
+            (SELECT COUNT(*) 
+             FROM medida_cautelar mc 
+             WHERE mc.proceso_id = p.id_proceso 
+             AND mc.revocacion_medida = FALSE) as medidas_activas
         ${baseSql}
         ORDER BY c.fecha_ingreso DESC 
         LIMIT ? OFFSET ?

@@ -69,9 +69,9 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const {fuero, sentencia} = req.query;
+    const {fuero, sentencia, search} = req.query;
 
-    const cjos = await cjoModel.getAll({fuero, sentencia});
+    const cjos = await cjoModel.getAll({fuero, sentencia, search});
 
     return successResponse(
         res,
@@ -99,13 +99,16 @@ const getById = async (req, res) => {
  * OBTENER POR CJ_ID
  */
 const getByCjId = async (req, res) => {
-    const {cj_id} = req.params;
+    const { cj_id } = req.params;
 
     const cjo = await cjoModel.getByCjId(cj_id);
 
     if (!cjo) {
-        const {NotFoundError} = require('../utils/errorHandler');
-        throw new NotFoundError('No existe CJO para esta CJ');
+        return successResponse(
+            res,
+            null,
+            'No existe CJO para esta CJ'
+        );
     }
 
     return successResponse(

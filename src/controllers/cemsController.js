@@ -11,6 +11,12 @@ const { SUCCESS_MESSAGES } = require('../config/constants');
  * CONTROLADOR DE CEMS
  */
 
+const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD
+};
+
 // =====================================================
 // CEMS PRINCIPAL
 // =====================================================
@@ -110,7 +116,17 @@ const getByCjoId = async (req, res) => {
 const update = async (req, res) => {
     const { id } = req.params;
 
-    const cems = await cemsModel.update(id, req.body);
+    let cemsData = { ...req.body };
+
+    // ✅ FORMATEAR FECHAS
+    if (cemsData.fecha_recepcion) {
+        cemsData.fecha_recepcion = formatDate(cemsData.fecha_recepcion);
+    }
+    if (cemsData.plan_actividad_fecha_inicio) {
+        cemsData.plan_actividad_fecha_inicio = formatDate(cemsData.plan_actividad_fecha_inicio);
+    }
+
+    const cems = await cemsModel.update(id, cemsData);
 
     return successResponse(
         res,
@@ -157,7 +173,16 @@ const getStats = async (req, res) => {
 const createExhortacion = async (req, res) => {
     validateRequiredFields(req.body, ['cems_id', 'proceso_id']);
 
-    const id = await cemsExhortacionModel.create(req.body);
+    let exhortacionData = { ...req.body };
+
+    if (exhortacionData.fecha_exhortacion_reparacion_dano) {
+        exhortacionData.fecha_exhortacion_reparacion_dano = formatDate(exhortacionData.fecha_exhortacion_reparacion_dano);
+    }
+    if (exhortacionData.fecha_exhortacion_cumplimiento) {
+        exhortacionData.fecha_exhortacion_cumplimiento = formatDate(exhortacionData.fecha_exhortacion_cumplimiento);
+    }
+
+    const id = await cemsExhortacionModel.create(exhortacionData);
     const exhortacion = await cemsExhortacionModel.getById(id);
 
     return createdResponse(
@@ -208,7 +233,16 @@ const getExhortacionByProceso = async (req, res) => {
 const updateExhortacion = async (req, res) => {
     const { id } = req.params;
 
-    const exhortacion = await cemsExhortacionModel.update(id, req.body);
+    let exhortacionData = { ...req.body };
+
+    if (exhortacionData.fecha_exhortacion_reparacion_dano) {
+        exhortacionData.fecha_exhortacion_reparacion_dano = formatDate(exhortacionData.fecha_exhortacion_reparacion_dano);
+    }
+    if (exhortacionData.fecha_exhortacion_cumplimiento) {
+        exhortacionData.fecha_exhortacion_cumplimiento = formatDate(exhortacionData.fecha_exhortacion_cumplimiento);
+    }
+
+    const exhortacion = await cemsExhortacionModel.update(id, exhortacionData);
 
     return successResponse(
         res,
@@ -255,7 +289,16 @@ const getStatsExhortacion = async (req, res) => {
 const createSeguimiento = async (req, res) => {
     validateRequiredFields(req.body, ['cems_id', 'proceso_id']);
 
-    const id = await cemsSeguimientoModel.create(req.body);
+    let seguimientoData = { ...req.body };
+
+    if (seguimientoData.cumplimiento_orden) {
+        seguimientoData.cumplimiento_orden = formatDate(seguimientoData.cumplimiento_orden);
+    }
+    if (seguimientoData.se_declaro_sustraido) {
+        seguimientoData.se_declaro_sustraido = formatDate(seguimientoData.se_declaro_sustraido);
+    }
+
+    const id = await cemsSeguimientoModel.create(seguimientoData);
     const seguimiento = await cemsSeguimientoModel.getById(id);
 
     return createdResponse(
@@ -264,6 +307,7 @@ const createSeguimiento = async (req, res) => {
         'Seguimiento de CEMS creado exitosamente'
     );
 };
+
 
 /**
  * OBTENER SEGUIMIENTOS DE CEMS
@@ -306,7 +350,16 @@ const getSeguimientoByProceso = async (req, res) => {
 const updateSeguimiento = async (req, res) => {
     const { id } = req.params;
 
-    const seguimiento = await cemsSeguimientoModel.update(id, req.body);
+    let seguimientoData = { ...req.body };
+
+    if (seguimientoData.cumplimiento_orden) {
+        seguimientoData.cumplimiento_orden = formatDate(seguimientoData.cumplimiento_orden);
+    }
+    if (seguimientoData.se_declaro_sustraido) {
+        seguimientoData.se_declaro_sustraido = formatDate(seguimientoData.se_declaro_sustraido);
+    }
+
+    const seguimiento = await cemsSeguimientoModel.update(id, seguimientoData);
 
     return successResponse(
         res,
@@ -314,6 +367,7 @@ const updateSeguimiento = async (req, res) => {
         SUCCESS_MESSAGES.UPDATED
     );
 };
+
 
 /**
  * ELIMINAR SEGUIMIENTO
