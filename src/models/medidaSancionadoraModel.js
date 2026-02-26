@@ -63,6 +63,29 @@ const create = async (medidaData) => {
 };
 
 /**
+ * OBTENER TODAS LAS MEDIDAS SANCIONADORAS
+ */
+const getAll = async () => {
+    const sql = `
+        SELECT
+            ms.*,
+            tms.nombre as tipo_nombre,
+            tms.es_privativa,
+            a.nombre as adolescente_nombre,
+            a.iniciales as adolescente_iniciales,
+            p.id_proceso
+        FROM medida_sancionadora ms
+                 INNER JOIN tipo_medida_sancionadora tms
+                            ON ms.tipo_medida_sancionadora_id = tms.id_tipo_medida_sancionadora
+                 INNER JOIN proceso p ON ms.proceso_id = p.id_proceso
+                 INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        ORDER BY ms.id_medida DESC
+    `;
+
+    return await executeQuery(sql);
+};
+
+/**
  * OBTENER TODAS LAS MEDIDAS DE UN PROCESO
  */
 const getByProcesoId = async (procesoId) => {
@@ -89,10 +112,12 @@ const getById = async (id) => {
         SELECT
             ms.*,
             tms.nombre as tipo_nombre,
-            tms.es_privativa
+            tms.es_privativa,
+            p.id_proceso 
         FROM medida_sancionadora ms
                  INNER JOIN tipo_medida_sancionadora tms
                             ON ms.tipo_medida_sancionadora_id = tms.id_tipo_medida_sancionadora
+                 INNER JOIN proceso p ON ms.proceso_id = p.id_proceso  
         WHERE ms.id_medida = ?
     `;
 
@@ -284,6 +309,7 @@ const getStatsGenerales = async () => {
 
 module.exports = {
     create,
+    getAll,
     getByProcesoId,
     getById,
     update,

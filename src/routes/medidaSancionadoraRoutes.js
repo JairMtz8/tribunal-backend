@@ -86,6 +86,17 @@ router.get(
 );
 
 /**
+ * @route   GET /api/medidas-sancionadoras
+ * @desc    Obtener todas las medidas sancionadoras
+ * @access  Private
+ */
+router.get(
+    '/',
+    authMiddleware,
+    asyncHandler(medidaSancionadoraController.getAll)
+);
+
+/**
  * @route   GET /api/medidas-sancionadoras/:id
  * @desc    Obtener medida por ID
  * @access  Private

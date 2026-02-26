@@ -95,21 +95,37 @@ const create = async (cemsData) => {
  * OBTENER TODAS LAS CEMS
  */
 const getAll = async (filters = {}) => {
-    const { estado_procesal_id, status } = filters;
+    const { estado_procesal_id, status, search } = filters;
 
     let sql = `
         SELECT
             cs.*,
             cj.numero_cj,
             cjo.numero_cjo,
-            ep.nombre as estado_procesal_nombre
+            cemci.numero_cemci,
+            ep.nombre as estado_procesal_nombre,
+            pc.id_proceso as proceso_id,
+            (SELECT COUNT(*) FROM medida_sancionadora ms
+             WHERE ms.proceso_id = pc.id_proceso) as total_medidas,
+            (SELECT ms.id_medida FROM medida_sancionadora ms
+             WHERE ms.proceso_id = pc.id_proceso
+                LIMIT 1) as medida_id
         FROM cems cs
-                 INNER JOIN cj ON cs.cj_id = cj.id_cj
-                 INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
-                 LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+            INNER JOIN cj ON cs.cj_id = cj.id_cj
+            INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
+            LEFT JOIN cemci ON cs.cemci_id = cemci.id_cemci
+            LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+            LEFT JOIN proceso_carpeta pc ON cs.id_cems = pc.cems_id
         WHERE 1=1
     `;
     const params = [];
+
+    // BÚSQUEDA
+    if (search) {
+        sql += ` AND (cs.numero_cems LIKE ? OR cj.numero_cj LIKE ? OR cjo.numero_cjo LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern, searchPattern);
+    }
 
     if (estado_procesal_id) {
         sql += ` AND cs.estado_procesal_id = ?`;
@@ -137,13 +153,18 @@ const getById = async (id) => {
             cjo.numero_cjo,
             cemci.numero_cemci,
             ep.nombre as estado_procesal_nombre,
-            pc.id_proceso as proceso_id  -- ← AGREGAR ESTA LÍNEA
+            pc.id_proceso as proceso_id,
+            (SELECT COUNT(*) FROM medida_sancionadora ms
+             WHERE ms.proceso_id = pc.id_proceso) as total_medidas,
+            (SELECT ms.id_medida FROM medida_sancionadora ms
+             WHERE ms.proceso_id = pc.id_proceso
+                LIMIT 1) as medida_id
         FROM cems cs
-                 INNER JOIN cj ON cs.cj_id = cj.id_cj
-                 INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
-                 LEFT JOIN cemci ON cs.cemci_id = cemci.id_cemci
-                 LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
-                 LEFT JOIN proceso_carpeta pc ON cs.id_cems = pc.cems_id
+            INNER JOIN cj ON cs.cj_id = cj.id_cj
+            INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
+            LEFT JOIN cemci ON cs.cemci_id = cemci.id_cemci
+            LEFT JOIN estado_procesal ep ON cs.estado_procesal_id = ep.id_estado
+            LEFT JOIN proceso_carpeta pc ON cs.id_cems = pc.cems_id
         WHERE cs.id_cems = ?
     `;
 

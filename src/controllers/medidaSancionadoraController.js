@@ -29,6 +29,19 @@ const create = async (req, res) => {
 };
 
 /**
+ * OBTENER TODAS LAS MEDIDAS
+ */
+const getAll = async (req, res) => {
+    const medidas = await medidaSancionadoraModel.getAll();
+
+    return successResponse(
+        res,
+        medidas,
+        'Medidas sancionadoras obtenidas exitosamente'
+    );
+};
+
+/**
  * OBTENER MEDIDAS DE UN PROCESO
  */
 const getByProcesoId = async (req, res) => {
@@ -157,6 +170,7 @@ const getStatsGenerales = async (req, res) => {
 
 module.exports = {
     create,
+    getAll,
     getByProcesoId,
     getById,
     update,

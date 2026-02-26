@@ -66,7 +66,7 @@ const getById = async (req, res) => {
         res,
         {
             ...cemci,
-            seguimientos  // ← Siempre incluir seguimientos
+            seguimientos
         },
         'CEMCI obtenida exitosamente'
     );

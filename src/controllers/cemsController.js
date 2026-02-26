@@ -41,11 +41,12 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const { estado_procesal_id, status } = req.query;
+    const { estado_procesal_id, status, search } = req.query;
 
     const cemss = await cemsModel.getAll({
         estado_procesal_id,
-        status
+        status,
+        search
     });
 
     return successResponse(
