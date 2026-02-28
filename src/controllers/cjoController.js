@@ -69,15 +69,27 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const {fuero, sentencia, search} = req.query;
+    let { fuero, sentencia, search, page = 1, limit = 10 } = req.query;
 
-    const cjos = await cjoModel.getAll({fuero, sentencia, search});
+    page = parseInt(page);
+    limit = parseInt(limit);
 
-    return successResponse(
-        res,
-        cjos,
-        'CJOs obtenidas exitosamente'
-    );
+    const offset = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+        cjoModel.getAll({ fuero, sentencia, search, limit, offset }),
+        cjoModel.getCount({ fuero, sentencia, search })
+    ]);
+
+    return successResponse(res, {
+        data,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    }, 'CJOs obtenidas exitosamente');
 };
 
 /**

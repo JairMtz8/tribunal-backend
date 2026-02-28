@@ -133,8 +133,15 @@ const create = async (cjData) => {
  * OBTENER TODOS
  */
 const getAll = async (filters = {}) => {
-    const {page = 1, limit = 10, search, tipo_fuero, vinculacion, reincidente, tiene_medidas} = filters;
-    const offset = (page - 1) * limit;
+    const {
+        limit = 10,
+        offset = 0,
+        search,
+        tipo_fuero,
+        vinculacion,
+        reincidente,
+        tiene_medidas
+    } = filters;
 
     let baseSql = `
         FROM cj c
@@ -219,7 +226,7 @@ const getAll = async (filters = {}) => {
     return {
         data: rows,
         pagination: {
-            page: parseInt(page),
+            page: Math.floor(offset / limit) + 1,
             limit: parseInt(limit),
             total,
             totalPages: Math.ceil(total / limit)

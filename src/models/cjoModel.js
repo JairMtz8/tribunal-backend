@@ -132,7 +132,7 @@ const create = async (cjoData) => {
  * OBTENER TODAS LAS CJO
  */
 const getAll = async (filters = {}) => {
-    const { fuero, sentencia, search } = filters;  // ✅ Debe incluir search
+    const { fuero, sentencia, search, limit = 10, offset = 0 } = filters;
 
     let sql = `
         SELECT cjo.*, cj.numero_cj
@@ -158,8 +158,7 @@ const getAll = async (filters = {}) => {
         params.push(`%${sentencia}%`);
     }
 
-    sql += ` ORDER BY cjo.fecha_ingreso DESC`;
-
+    sql += ` ORDER BY cjo.fecha_ingreso DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`;
     return await executeQuery(sql, params);
 };
 

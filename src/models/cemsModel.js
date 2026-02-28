@@ -95,7 +95,7 @@ const create = async (cemsData) => {
  * OBTENER TODAS LAS CEMS
  */
 const getAll = async (filters = {}) => {
-    const { estado_procesal_id, status, search } = filters;
+    const { estado_procesal_id, status, search, limit, offset } = filters;
 
     let sql = `
         SELECT
@@ -138,6 +138,12 @@ const getAll = async (filters = {}) => {
     }
 
     sql += ` ORDER BY cs.fecha_recepcion DESC`;
+
+    if (limit) {
+        const limitInt = parseInt(limit) || 10;
+        const offsetInt = parseInt(offset) || 0;
+        sql += ` LIMIT ${limitInt} OFFSET ${offsetInt}`;
+    }
 
     return await executeQuery(sql, params);
 };
@@ -253,14 +259,30 @@ const remove = async (id) => {
  * CONTAR CEMS
  */
 const getCount = async (filters = {}) => {
-    const { estado_procesal_id } = filters;
+    const { estado_procesal_id, status, search } = filters;
 
-    let sql = `SELECT COUNT(*) as total FROM cems WHERE 1=1`;
+    let sql = `SELECT COUNT(*) as total
+               FROM cems cs
+                        INNER JOIN cj ON cs.cj_id = cj.id_cj
+                        INNER JOIN cjo ON cs.cjo_id = cjo.id_cjo
+               WHERE 1=1`;
+
     const params = [];
 
+    if (search) {
+        sql += ` AND (cs.numero_cems LIKE ? OR cj.numero_cj LIKE ? OR cjo.numero_cjo LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern, searchPattern);
+    }
+
     if (estado_procesal_id) {
-        sql += ` AND estado_procesal_id = ?`;
+        sql += ` AND cs.estado_procesal_id = ?`;
         params.push(estado_procesal_id);
+    }
+
+    if (status !== undefined) {
+        sql += ` AND cs.status = ?`;
+        params.push(status);
     }
 
     const [result] = await executeQuery(sql, params);

@@ -41,17 +41,33 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const { estado_procesal_id, status, search } = req.query;
+    const { estado_procesal_id, status, search, page = 1, limit = 10 } = req.query;
 
-    const cemss = await cemsModel.getAll({
-        estado_procesal_id,
-        status,
-        search
-    });
+    const offset = (page - 1) * limit;
+
+    const [cemss, total] = await Promise.all([
+        cemsModel.getAll({
+            estado_procesal_id,
+            status,
+            search,
+            limit,
+            offset
+        }),
+        cemsModel.getCount({
+            estado_procesal_id,
+            status,
+            search
+        })
+    ]);
 
     return successResponse(
         res,
-        cemss,
+        {
+            data: cemss,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / limit)
+        },
         'CEMS obtenidas exitosamente'
     );
 };

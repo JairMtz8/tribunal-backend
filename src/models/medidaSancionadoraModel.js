@@ -203,6 +203,7 @@ const getPrivativas = async () => {
         SELECT
             ms.*,
             tms.nombre as tipo_nombre,
+            tms.es_privativa as es_privativa,
             a.nombre as adolescente_nombre,
             a.iniciales as adolescente_iniciales
         FROM medida_sancionadora ms
@@ -225,6 +226,7 @@ const getNoPrivativas = async () => {
         SELECT
             ms.*,
             tms.nombre as tipo_nombre,
+            tms.es_privativa as es_privativa,
             a.nombre as adolescente_nombre,
             a.iniciales as adolescente_iniciales
         FROM medida_sancionadora ms

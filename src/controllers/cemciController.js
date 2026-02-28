@@ -37,17 +37,39 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const {estado_procesal_id, concluido, search} = req.query;
+    let {
+        estado_procesal_id,
+        concluido,
+        search,
+        page = 1,
+        limit = 10
+    } = req.query;
+
+    page = Number(page);
+    limit = Number(limit);
+
+    const offset = (page - 1) * limit;
 
     const cemcis = await cemciModel.getAll({
         estado_procesal_id,
         concluido,
-        search
+        search,
+        limit,
+        offset
+    });
+
+    const total = await cemciModel.getCount({
+        estado_procesal_id
     });
 
     return successResponse(
         res,
-        cemcis,
+        {
+            data: cemcis,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        },
         'CEMCIs obtenidas exitosamente'
     );
 };
