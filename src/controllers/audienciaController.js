@@ -29,19 +29,36 @@ const create = async (req, res) => {
  * OBTENER TODAS
  */
 const getAll = async (req, res) => {
-    const { tipo, fecha_desde, fecha_hasta } = req.query;
+    try {
+        const {
+            tipo,
+            fecha_desde,
+            fecha_hasta,
+            page = 1,
+            limit = 10
+        } = req.query;
 
-    const audiencias = await audienciaModel.getAll({
-        tipo,
-        fecha_desde,
-        fecha_hasta
-    });
+        const result = await audienciaModel.getAll({
+            tipo,
+            fecha_desde,
+            fecha_hasta,
+            page: Number(page),
+            limit: Number(limit)
+        });
 
-    return successResponse(
-        res,
-        audiencias,
-        'Audiencias obtenidas exitosamente'
-    );
+        return successResponse(
+            res,
+            result,
+            'Audiencias obtenidas exitosamente'
+        );
+
+    } catch (error) {
+        console.error('Error al obtener audiencias:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener audiencias'
+        });
+    }
 };
 
 /**

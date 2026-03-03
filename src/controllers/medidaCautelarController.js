@@ -193,6 +193,32 @@ const verificarPrivativas = async (req, res) => {
     );
 };
 
+/**
+ * TRAER TODOS LOS DATOS
+ */
+const getAll = async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+
+        const result = await medidaCautelarModel.getAll({
+            page: Number(page),
+            limit: Number(limit)
+        });
+
+        return res.status(200).json({
+            success: true,
+            ...result
+        });
+
+    } catch (error) {
+        console.error('Error al obtener medidas cautelares:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener medidas cautelares'
+        });
+    }
+};
+
 module.exports = {
     create,
     getByProcesoId,
@@ -202,5 +228,6 @@ module.exports = {
     revocar,
     remove,
     getStats,
-    verificarPrivativas
+    verificarPrivativas,
+    getAll
 };

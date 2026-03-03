@@ -321,7 +321,23 @@ const getAll = async (filters = {}) => {
     const { page = 1, limit = 10 } = filters;
     const offset = (page - 1) * limit;
 
-    const sql = `
+    const baseSql = `
+        FROM medida_cautelar mc
+        LEFT JOIN tipo_medida_cautelar tmc 
+            ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
+        LEFT JOIN proceso p 
+            ON mc.proceso_id = p.id_proceso
+        LEFT JOIN adolescente a 
+            ON p.adolescente_id = a.id_adolescente
+    `;
+
+    // 🔹 1. Total
+    const countSql = `SELECT COUNT(*) as total ${baseSql}`;
+    const [countResult] = await executeQuery(countSql);
+    const total = countResult.total;
+
+    // 🔹 2. Datos paginados
+    const dataSql = `
         SELECT 
             mc.*,
             tmc.nombre as tipo_medida_nombre,
@@ -329,16 +345,22 @@ const getAll = async (filters = {}) => {
             p.adolescente_id,
             a.nombre as adolescente_nombre,
             a.iniciales as adolescente_iniciales
-        FROM medida_cautelar mc
-        LEFT JOIN tipo_medida_cautelar tmc ON mc.tipo_medida_cautelar_id = tmc.id_tipo_medida_cautelar
-        LEFT JOIN proceso p ON mc.proceso_id = p.id_proceso
-        LEFT JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+        ${baseSql}
         ORDER BY mc.fecha_medida_cautelar DESC
         LIMIT ? OFFSET ?
     `;
 
-    const medidas = await executeQuery(sql, [parseInt(limit), parseInt(offset)]);
-    return medidas;
+    const data = await executeQuery(dataSql, [
+        Number(limit),
+        Number(offset)
+    ]);
+
+    return {
+        data,
+        total,
+        page: Number(page),
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 module.exports = {

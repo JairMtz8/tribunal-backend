@@ -176,8 +176,8 @@ const validatePagination = [
 
     query('limit')
         .optional()
-        .isInt({min: 1, max: 100})
-        .withMessage('limit debe ser un número entre 1 y 100'),
+        .isInt({min: 1, max: 500})
+        .withMessage('limit debe ser un número entre 1 y 500'),
 
     query('search')
         .optional()
