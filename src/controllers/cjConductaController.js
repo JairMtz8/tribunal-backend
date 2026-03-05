@@ -115,7 +115,7 @@ const getMasFrecuentes = async (req, res) => {
     const { limit } = req.query;
 
     const conductas = await cjConductaModel.getMasFrecuentes(
-        limit ? parseInt(limit) : 10
+        limit ? parseInt(limit, 10) : 10
     );
 
     return successResponse(
@@ -138,6 +138,37 @@ const getStatsByDelitoCalificativa = async (req, res) => {
     );
 };
 
+/**
+ * CONDUCTAS POR MUNICIPIO
+ */
+const getPorMunicipio = async (req, res) => {
+    const { conducta_id, fuero, limit } = req.query;
+
+    const data = await cjConductaModel.getPorMunicipio({ conducta_id, fuero, limit });
+
+    return successResponse(res, data, 'Conductas por municipio obtenidas exitosamente');
+};
+
+/**
+ * CONDUCTAS POR EDAD DEL ADOLESCENTE
+ */
+const getPorEdad = async (req, res) => {
+    const { conducta_id, limit } = req.query;
+
+    const data = await cjConductaModel.getPorEdad({ conducta_id, limit });
+
+    return successResponse(res, data, 'Conductas por edad obtenidas exitosamente');
+};
+
+/**
+ * REINCIDENCIA POR CONDUCTA
+ */
+const getReincidencia = async (req, res) => {
+    const data = await cjConductaModel.getReincidencia();
+
+    return successResponse(res, data, 'Reincidencia por conducta obtenida exitosamente');
+};
+
 module.exports = {
     getByCjId,
     getById,
@@ -146,5 +177,8 @@ module.exports = {
     remove,
     getStats,
     getMasFrecuentes,
-    getStatsByDelitoCalificativa
+    getStatsByDelitoCalificativa,
+    getPorMunicipio,
+    getPorEdad,
+    getReincidencia
 };

@@ -62,6 +62,18 @@ router.get(
 );
 
 /**
+ * @route   GET /api/medidas-sancionadoras/por-conducta
+ * @desc    Medidas sancionadoras agrupadas por conducta cometida
+ * @query   conducta_id?
+ * @access  Private
+ */
+router.get(
+    '/por-conducta',
+    authMiddleware,
+    asyncHandler(medidaSancionadoraController.getPorConducta)
+);
+
+/**
  * @route   GET /api/medidas-sancionadoras/proceso/:proceso_id
  * @desc    Obtener medidas de un proceso
  * @access  Private

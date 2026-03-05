@@ -168,6 +168,17 @@ const getStatsGenerales = async (req, res) => {
     );
 };
 
+/**
+ * MEDIDAS SANCIONADORAS POR CONDUCTA
+ */
+const getPorConducta = async (req, res) => {
+    const { conducta_id } = req.query;
+
+    const data = await medidaSancionadoraModel.getPorConducta({ conducta_id });
+
+    return successResponse(res, data, 'Medidas por conducta obtenidas exitosamente');
+};
+
 module.exports = {
     create,
     getAll,
@@ -179,5 +190,6 @@ module.exports = {
     getNoPrivativas,
     verificarPrivativas,
     getStats,
-    getStatsGenerales
+    getStatsGenerales,
+    getPorConducta
 };

@@ -46,6 +46,44 @@ router.get(
 );
 
 /**
+ * @route   GET /api/cj-conductas/por-municipio
+ * @desc    Conductas agrupadas por municipio del lugar de los hechos
+ * @query   conducta_id?, fuero?, limit?
+ * @access  Private
+ */
+router.get(
+    '/por-municipio',
+    authMiddleware,
+    canConsultar('CJ'),
+    asyncHandler(cjConductaController.getPorMunicipio)
+);
+
+/**
+ * @route   GET /api/cj-conductas/por-edad
+ * @desc    Top conductas por rango de edad del adolescente al momento del hecho
+ * @query   conducta_id?, limit? (top N por rango, default: 5)
+ * @access  Private
+ */
+router.get(
+    '/por-edad',
+    authMiddleware,
+    canConsultar('CJ'),
+    asyncHandler(cjConductaController.getPorEdad)
+);
+
+/**
+ * @route   GET /api/cj-conductas/reincidencia
+ * @desc    Reincidencia por conducta: total de casos, reincidentes y porcentaje
+ * @access  Private
+ */
+router.get(
+    '/reincidencia',
+    authMiddleware,
+    canConsultar('CJ'),
+    asyncHandler(cjConductaController.getReincidencia)
+);
+
+/**
  * @route   GET /api/cj-conductas/cj/:cj_id
  * @desc    Obtener todas las conductas de una CJ
  * @access  Private

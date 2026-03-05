@@ -287,6 +287,8 @@ const getStats = async () => {
  * OBTENER CONDUCTAS MÁS FRECUENTES
  */
 const getMasFrecuentes = async (limit = 10) => {
+    const limitInt = parseInt(limit, 10) || 10;
+
     const sql = `
         SELECT
             c.id_conducta,
@@ -296,10 +298,10 @@ const getMasFrecuentes = async (limit = 10) => {
                  INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
         GROUP BY c.id_conducta, c.nombre
         ORDER BY total_casos DESC
-            LIMIT ?
+        LIMIT ${limitInt}
     `;
 
-    return await executeQuery(sql, [limit]);
+    return await executeQuery(sql);
 };
 
 /**
@@ -322,6 +324,137 @@ const getStatsByDelitoCalificativa = async () => {
     return await executeQuery(sql);
 };
 
+/**
+ * CONDUCTAS POR MUNICIPIO DE LOS HECHOS
+ */
+const getPorMunicipio = async (filters = {}) => {
+    const { conducta_id, fuero, limit } = filters;
+
+    const params = [];
+    let whereExtra = '';
+
+    if (conducta_id) {
+        whereExtra += ' AND cc.conducta_id = ?';
+        params.push(parseInt(conducta_id, 10));
+    }
+
+    if (fuero) {
+        whereExtra += ' AND cj.tipo_fuero = ?';
+        params.push(fuero);
+    }
+
+    let sql = `
+        SELECT
+            d.municipio,
+            COUNT(*) AS total_conductas,
+            (
+                SELECT c2.nombre
+                FROM cj_conducta cc2
+                    INNER JOIN conducta c2 ON cc2.conducta_id = c2.id_conducta
+                    INNER JOIN cj cj2 ON cc2.cj_id = cj2.id_cj
+                    INNER JOIN domicilio d2 ON cj2.domicilio_hechos_id = d2.id_domicilio
+                WHERE d2.municipio = d.municipio
+                GROUP BY c2.id_conducta
+                ORDER BY COUNT(*) DESC
+                LIMIT 1
+            ) AS conducta_mas_frecuente
+        FROM cj_conducta cc
+            INNER JOIN cj ON cc.cj_id = cj.id_cj
+            INNER JOIN domicilio d ON cj.domicilio_hechos_id = d.id_domicilio
+        WHERE d.municipio IS NOT NULL
+          AND cc.conducta_id IS NOT NULL
+          ${whereExtra}
+        GROUP BY d.municipio
+        ORDER BY total_conductas DESC
+    `;
+
+    if (limit) {
+        const limitInt = parseInt(limit, 10);
+        if (!isNaN(limitInt) && limitInt > 0) {
+            sql += ` LIMIT ${limitInt}`;
+        }
+    }
+
+    return await executeQuery(sql, params);
+};
+
+/**
+ * CONDUCTAS POR RANGO DE EDAD DEL ADOLESCENTE AL MOMENTO DEL HECHO
+ */
+const getPorEdad = async (filters = {}) => {
+    const { conducta_id, limit = 5 } = filters;
+
+    const params = [];
+    let whereExtra = '';
+
+    if (conducta_id) {
+        whereExtra += ' AND cc.conducta_id = ?';
+        params.push(parseInt(conducta_id, 10));
+    }
+
+    const sql = `
+        SELECT
+            CASE
+                WHEN TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, COALESCE(cc.fecha_conducta, CURDATE())) BETWEEN 12 AND 13 THEN '12-13'
+                WHEN TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, COALESCE(cc.fecha_conducta, CURDATE())) BETWEEN 14 AND 15 THEN '14-15'
+                WHEN TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, COALESCE(cc.fecha_conducta, CURDATE())) BETWEEN 16 AND 17 THEN '16-17'
+                ELSE 'Otro'
+            END AS rango_edad,
+            c.nombre AS conducta,
+            COUNT(*)  AS total
+        FROM cj_conducta cc
+            INNER JOIN cj ON cc.cj_id = cj.id_cj
+            INNER JOIN proceso_carpeta pc ON cj.id_cj = pc.cj_id
+            INNER JOIN proceso p ON pc.id_proceso = p.id_proceso
+            INNER JOIN adolescente a ON p.adolescente_id = a.id_adolescente
+            INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
+        WHERE a.fecha_nacimiento IS NOT NULL
+          ${whereExtra}
+        GROUP BY rango_edad, c.id_conducta, c.nombre
+        HAVING rango_edad IN ('12-13', '14-15', '16-17')
+        ORDER BY rango_edad, total DESC
+    `;
+
+    const rows = await executeQuery(sql, params);
+
+    // Agrupar por rango y limitar top N por rango
+    const limitNum = parseInt(limit, 10);
+    const grouped = {};
+    for (const row of rows) {
+        if (!grouped[row.rango_edad]) {
+            grouped[row.rango_edad] = [];
+        }
+        if (grouped[row.rango_edad].length < limitNum) {
+            grouped[row.rango_edad].push({ nombre: row.conducta, total: row.total });
+        }
+    }
+
+    const rangoOrden = ['12-13', '14-15', '16-17'];
+    return rangoOrden
+        .filter(r => grouped[r])
+        .map(r => ({ rango_edad: r, conductas: grouped[r] }));
+};
+
+/**
+ * REINCIDENCIA POR CONDUCTA
+ */
+const getReincidencia = async () => {
+    const sql = `
+        SELECT
+            c.nombre                                                                   AS conducta,
+            COUNT(*)                                                                   AS total_casos,
+            COUNT(CASE WHEN cj.reincidente = 1 THEN 1 END)                            AS reincidentes,
+            ROUND(COUNT(CASE WHEN cj.reincidente = 1 THEN 1 END) / COUNT(*) * 100, 1) AS porcentaje
+        FROM cj_conducta cc
+            INNER JOIN conducta c ON cc.conducta_id = c.id_conducta
+            INNER JOIN cj ON cc.cj_id = cj.id_cj
+        GROUP BY c.id_conducta, c.nombre
+        ORDER BY porcentaje DESC, total_casos DESC
+    `;
+
+    return await executeQuery(sql);
+};
+
 module.exports = {
     create,
     getByCjId,
@@ -331,5 +464,8 @@ module.exports = {
     countByCjId,
     getStats,
     getMasFrecuentes,
-    getStatsByDelitoCalificativa
+    getStatsByDelitoCalificativa,
+    getPorMunicipio,
+    getPorEdad,
+    getReincidencia
 };

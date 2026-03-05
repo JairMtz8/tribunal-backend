@@ -260,6 +260,89 @@ const getCount = async (filters = {}) => {
     return result.total;
 };
 
+/**
+ * TENDENCIA TEMPORAL DE APERTURA DE CASOS
+ */
+const getTendencia = async (filters = {}) => {
+    const { periodo = 'mes', anio, desde, hasta } = filters;
+
+    const formatStr = periodo === 'año' ? '%Y' : '%Y-%m';
+    const params = [];
+    let whereExtra = '';
+
+    if (anio) {
+        whereExtra += ' AND YEAR(cj.fecha_ingreso) = ?';
+        params.push(parseInt(anio, 10));
+    }
+
+    if (desde) {
+        whereExtra += ' AND cj.fecha_ingreso >= ?';
+        params.push(desde);
+    }
+
+    if (hasta) {
+        whereExtra += ' AND cj.fecha_ingreso <= ?';
+        params.push(hasta);
+    }
+
+    const sql = `
+        SELECT
+            DATE_FORMAT(cj.fecha_ingreso, '${formatStr}') AS periodo,
+            COUNT(DISTINCT p.id_proceso)                   AS total
+        FROM proceso p
+            INNER JOIN proceso_carpeta pc ON p.id_proceso = pc.id_proceso
+            INNER JOIN cj ON pc.cj_id = cj.id_cj
+        WHERE cj.fecha_ingreso IS NOT NULL
+          ${whereExtra}
+        GROUP BY periodo
+        ORDER BY periodo ASC
+    `;
+
+    return await executeQuery(sql, params);
+};
+
+/**
+ * TIEMPO PROMEDIO DE PROCESO (desde apertura CJ hasta sentencia CJO)
+ */
+const getTiempoPromedio = async () => {
+    const sqlGeneral = `
+        SELECT AVG(DATEDIFF(cjo.fecha_sentencia, cj.fecha_ingreso)) AS promedio_dias_general
+        FROM proceso p
+            INNER JOIN proceso_carpeta pc ON p.id_proceso = pc.id_proceso
+            INNER JOIN cj ON pc.cj_id = cj.id_cj
+            INNER JOIN cjo ON cj.id_cj = cjo.cj_id
+        WHERE cjo.fecha_sentencia IS NOT NULL
+          AND cj.fecha_ingreso IS NOT NULL
+    `;
+
+    const sqlPorSentencia = `
+        SELECT
+            cjo.sentencia                                          AS tipo,
+            ROUND(AVG(DATEDIFF(cjo.fecha_sentencia, cj.fecha_ingreso))) AS promedio_dias
+        FROM proceso p
+            INNER JOIN proceso_carpeta pc ON p.id_proceso = pc.id_proceso
+            INNER JOIN cj ON pc.cj_id = cj.id_cj
+            INNER JOIN cjo ON cj.id_cj = cjo.cj_id
+        WHERE cjo.fecha_sentencia IS NOT NULL
+          AND cj.fecha_ingreso IS NOT NULL
+          AND cjo.sentencia IS NOT NULL
+        GROUP BY cjo.sentencia
+        ORDER BY promedio_dias DESC
+    `;
+
+    const [[general], porSentencia] = await Promise.all([
+        executeQuery(sqlGeneral),
+        executeQuery(sqlPorSentencia)
+    ]);
+
+    return {
+        promedio_dias_general: general.promedio_dias_general
+            ? Math.round(general.promedio_dias_general)
+            : null,
+        por_sentencia: porSentencia
+    };
+};
+
 module.exports = {
     create,
     getAll,
@@ -268,5 +351,7 @@ module.exports = {
     update,
     remove,
     tieneCarpetas,
-    getCount
+    getCount,
+    getTendencia,
+    getTiempoPromedio
 };

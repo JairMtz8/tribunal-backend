@@ -40,6 +40,29 @@ router.get(
 );
 
 /**
+ * @route   GET /api/procesos/tendencia
+ * @desc    Tendencia temporal de apertura de casos
+ * @query   periodo? (mes|año, default: mes), anio?, desde?, hasta?
+ * @access  Private
+ */
+router.get(
+    '/tendencia',
+    authMiddleware,
+    asyncHandler(procesoController.getTendencia)
+);
+
+/**
+ * @route   GET /api/procesos/tiempo-promedio
+ * @desc    Tiempo promedio (días) desde apertura CJ hasta sentencia CJO
+ * @access  Private
+ */
+router.get(
+    '/tiempo-promedio',
+    authMiddleware,
+    asyncHandler(procesoController.getTiempoPromedio)
+);
+
+/**
  * @route   GET /api/procesos/adolescente/:id
  * @desc    Obtener proceso de un adolescente específico
  * @access  Private

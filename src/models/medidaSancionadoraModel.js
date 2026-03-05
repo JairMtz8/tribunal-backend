@@ -309,6 +309,54 @@ const getStatsGenerales = async () => {
     return stats;
 };
 
+/**
+ * MEDIDAS SANCIONADORAS POR CONDUCTA
+ */
+const getPorConducta = async (filters = {}) => {
+    const { conducta_id } = filters;
+
+    const params = [];
+    let whereExtra = '';
+
+    if (conducta_id) {
+        whereExtra += ' AND c.id_conducta = ?';
+        params.push(parseInt(conducta_id, 10));
+    }
+
+    const sql = `
+        SELECT
+            c.id_conducta,
+            c.nombre                          AS conducta,
+            tms.nombre                        AS tipo_medida,
+            COUNT(DISTINCT ms.id_medida)      AS total
+        FROM conducta c
+            INNER JOIN cj_conducta cc ON c.id_conducta = cc.conducta_id
+            INNER JOIN cj ON cc.cj_id = cj.id_cj
+            INNER JOIN proceso_carpeta pc ON cj.id_cj = pc.cj_id
+            INNER JOIN proceso p ON pc.id_proceso = p.id_proceso
+            INNER JOIN medida_sancionadora ms ON p.id_proceso = ms.proceso_id
+            INNER JOIN tipo_medida_sancionadora tms
+                ON ms.tipo_medida_sancionadora_id = tms.id_tipo_medida_sancionadora
+        WHERE c.nombre IS NOT NULL
+          ${whereExtra}
+        GROUP BY c.id_conducta, c.nombre, tms.id_tipo_medida_sancionadora, tms.nombre
+        ORDER BY c.nombre, total DESC
+    `;
+
+    const rows = await executeQuery(sql, params);
+
+    // Agrupar por conducta
+    const map = new Map();
+    for (const row of rows) {
+        if (!map.has(row.id_conducta)) {
+            map.set(row.id_conducta, { conducta: row.conducta, medidas: [] });
+        }
+        map.get(row.id_conducta).medidas.push({ tipo: row.tipo_medida, total: row.total });
+    }
+
+    return Array.from(map.values());
+};
+
 module.exports = {
     create,
     getAll,
@@ -322,5 +370,6 @@ module.exports = {
     tieneMedidasPrivativas,
     calcularPlazoTotalDias,
     getStats,
-    getStatsGenerales
+    getStatsGenerales,
+    getPorConducta
 };

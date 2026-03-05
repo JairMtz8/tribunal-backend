@@ -330,6 +330,26 @@ const getStats = async (req, res) => {
     );
 };
 
+/**
+ * TENDENCIA TEMPORAL DE CASOS
+ */
+const getTendencia = async (req, res) => {
+    const { periodo, anio, desde, hasta } = req.query;
+
+    const data = await procesoModel.getTendencia({ periodo, anio, desde, hasta });
+
+    return successResponse(res, data, 'Tendencia de casos obtenida exitosamente');
+};
+
+/**
+ * TIEMPO PROMEDIO DE PROCESO
+ */
+const getTiempoPromedio = async (req, res) => {
+    const data = await procesoModel.getTiempoPromedio();
+
+    return successResponse(res, data, 'Tiempo promedio de proceso obtenido exitosamente');
+};
+
 module.exports = {
     create,
     getAll,
@@ -338,5 +358,7 @@ module.exports = {
     update,
     remove,
     getStats,
-    getProcesoCompleto  // Exportar para uso en otros módulos
+    getProcesoCompleto,  // Exportar para uso en otros módulos
+    getTendencia,
+    getTiempoPromedio
 };
