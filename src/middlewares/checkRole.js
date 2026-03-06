@@ -15,6 +15,8 @@ const { ForbiddenError } = require('../utils/errorHandler');
  *   controller.funcion
  * )
  */
+const { ROLES } = require('../config/constants');
+
 const checkRole = (allowedRoles) => {
     return (req, res, next) => {
         // Verificar que authMiddleware se haya ejecutado antes
@@ -41,19 +43,19 @@ const checkRole = (allowedRoles) => {
  * MIDDLEWARE: Solo Administrador
  * Atajo para verificar que sea administrador
  */
-const adminOnly = checkRole(['Administrador']);
+const adminOnly = checkRole([ROLES.ADMIN]);
 
 /**
  * MIDDLEWARE: Administrador o Juzgado
  * Los roles que pueden hacer operaciones en CJ y CJO
  */
-const adminOrJuzgado = checkRole(['Administrador', 'Juzgado']);
+const adminOrJuzgado = checkRole([ROLES.ADMIN, ROLES.JUZGADO]);
 
 /**
  * MIDDLEWARE: Administrador o Juzgado Ejecución
  * Los roles que pueden hacer operaciones en CEMCI y CEMS
  */
-const adminOrJuzgadoEjecucion = checkRole(['Administrador', 'Juzgado Ejecución']);
+const adminOrJuzgadoEjecucion = checkRole([ROLES.ADMIN, ROLES.JUZGADO_EJECUCION]);
 
 /**
  * MIDDLEWARE: Verificar que sea el mismo usuario

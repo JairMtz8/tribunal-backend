@@ -87,7 +87,7 @@ router.post(
     authMiddleware,
     (req, res, next) => {
         const {rol_nombre} = req.user;
-        const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
+        const rolesPermitidos = ['Administrador', 'Juzgados'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
             const {ForbiddenError} = require('../utils/errorHandler');
@@ -112,7 +112,7 @@ router.put(
     authMiddleware,
     (req, res, next) => {
         const {rol_nombre} = req.user;
-        const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
+        const rolesPermitidos = ['Administrador', 'Juzgados'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
             const {ForbiddenError} = require('../utils/errorHandler');
@@ -139,7 +139,7 @@ router.put(
     authMiddleware,
     (req, res, next) => {
         const {rol_nombre} = req.user;
-        const rolesPermitidos = ['Administrador', 'Juzgado', 'Juzgado Ejecución'];
+        const rolesPermitidos = ['Administrador', 'Juzgados'];
 
         if (!rolesPermitidos.includes(rol_nombre)) {
             const {ForbiddenError} = require('../utils/errorHandler');

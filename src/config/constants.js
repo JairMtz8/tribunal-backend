@@ -10,8 +10,8 @@
 // ROLES DEL SISTEMA
 const ROLES = {
     ADMIN: 'Administrador',
-    JUZGADO: 'Juzgado',
-    JUZGADO_EJECUCION: 'Juzgado Ejecución',
+    JUZGADO: 'Juzgados',
+    JUZGADO_EJECUCION: 'Juzgado de Ejecución',
 };
 
 // TIPOS DE FUERO

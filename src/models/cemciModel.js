@@ -74,11 +74,13 @@ const getAll = async (filters = {}) => {
             c.*,
             cj.numero_cj,
             cjo.numero_cjo,
-            ep.nombre as estado_procesal_nombre
+            ep.nombre as estado_procesal_nombre,
+            pc.id_proceso as proceso_id
         FROM cemci c
                  INNER JOIN cj ON c.cj_id = cj.id_cj
                  LEFT JOIN cjo ON c.cjo_id = cjo.id_cjo
                  LEFT JOIN estado_procesal ep ON c.estado_procesal_id = ep.id_estado
+                 LEFT JOIN proceso_carpeta pc ON c.id_cemci = pc.cemci_id
         WHERE 1=1
     `;
     const params = [];
